@@ -582,12 +582,35 @@ function getExplanation(diff) {
   }
 }
 
+function generateExecutiveSummary(summary, diffs) {
+  const criticalCount = summary.severityCounts.critical || 0;
+  const highCount = summary.severityCounts.high || 0;
+  const totalMoney = summary.totalAmount;
+  
+  let moneyText = totalMoney > 0 ? `+${totalMoney.toLocaleString('tr-TR')} ₺ maliyet artışı` 
+                : (totalMoney < 0 ? `${totalMoney.toLocaleString('tr-TR')} ₺ maliyet azalışı` : `ciddi bir maliyet etkisi`);
+
+  // Bulunan en büyük bütçe etkisine sahip disiplini tespit edelim (varsa)
+  const discImpacts = {};
+  diffs.forEach(d => {
+    const disc = d.v1Item?.discipline || d.v2Item?.discipline;
+    if (disc) {
+      discImpacts[disc] = (discImpacts[disc] || 0) + Math.abs(d.amountDelta || 0);
+    }
+  });
+  const topDisc = Object.keys(discImpacts).sort((a,b) => discImpacts[b] - discImpacts[a])[0];
+  let discText = topDisc ? `En büyük değişim hareketliliği **${topDisc}** disiplininde gözlemlendi.` : '';
+
+  return `Kıyaslanan revizyonlar sonucunda toplam **${summary.totalDiffs} kalemde** değişiklik (silinme, eklenme, miktar veya isim değişimi) tespit edildi. Bunların **${criticalCount} tanesi kritik**, **${highCount} tanesi yüksek** etkili olarak işaretlendi. Bu revizyonun projenin toplam bütçesine etkisi **${moneyText}** olarak hesaplanmıştır. ${discText}`;
+}
+
 function generateDiffs(matches) {
   const diffs = [];
 
   for (const match of matches) {
     const base = match.base;
     const comp = match.comp;
+    const conf = match.confidence || 0;
 
     if (base && comp) {
       if (normalizeUnit(base.unit) !== normalizeUnit(comp.unit)) {
@@ -604,6 +627,7 @@ function generateDiffs(matches) {
           deltaPercent: 0,
           amountDelta: 0,
           activeUnitPrice: base?.unitPrice || comp?.unitPrice || 0,
+          confidence: conf,
           v1Item: base,
           v2Item: comp,
         });
@@ -622,6 +646,7 @@ function generateDiffs(matches) {
           deltaPercent: 0,
           amountDelta: 0,
           activeUnitPrice: base?.unitPrice || comp?.unitPrice || 0,
+          confidence: conf,
           v1Item: base,
           v2Item: comp,
         });
@@ -641,6 +666,7 @@ function generateDiffs(matches) {
           deltaPercent: percent,
           amountDelta: delta * (base.unitPrice || 0),
           activeUnitPrice: base.unitPrice || 0,
+          confidence: conf,
           v1Item: base,
           v2Item: comp,
         });
@@ -660,6 +686,7 @@ function generateDiffs(matches) {
           deltaPercent: percent,
           amountDelta: delta * (base.unitPrice || 0),
           activeUnitPrice: base.unitPrice || 0,
+          confidence: conf,
           v1Item: base,
           v2Item: comp,
         });
@@ -678,6 +705,7 @@ function generateDiffs(matches) {
         deltaPercent: -100,
         amountDelta: -(base.quantity * (base.unitPrice || 0)),
         activeUnitPrice: base.unitPrice || 0,
+        confidence: 0,
         v1Item: base,
         v2Item: null,
       });
@@ -695,6 +723,7 @@ function generateDiffs(matches) {
         deltaPercent: 100,
         amountDelta: comp.quantity * (comp.unitPrice || 0),
         activeUnitPrice: comp.unitPrice || 0,
+        confidence: 0,
         v1Item: null,
         v2Item: comp,
       });
@@ -792,8 +821,13 @@ function showResults() {
 
 function renderResults() {
   const s = state.summary;
+  const execSummary = generateExecutiveSummary(s, state.diffs);
 
   let kpiHtml = `
+    <div class="executive-summary-panel" style="background: rgba(59, 130, 246, 0.05); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 20px;">
+      <h3 style="margin-bottom: 8px; font-weight: 700; color: var(--primary); font-size: 15px;">📋 Yönetici Özeti & Etki Analizi</h3>
+      <p style="font-size: 13px; color: var(--text); line-height: 1.6;">${execSummary}</p>
+    </div>
     <div class="kpi-row kpi-main">
       <div class="kpi-card kpi-large">
         <div class="kpi-value">${s.totalDiffs}</div>
@@ -856,7 +890,7 @@ Toplam:         ${(metrics.perfTiming?.total || 0).toFixed(0)}ms
 
   const topCostDiffs = [...state.diffs]
     .sort((a,b) => Math.abs(b.amountDelta||0) - Math.abs(a.amountDelta||0))
-    .slice(0, 5);
+    .slice(0, 10);
 
   window.costChartInstance = new Chart(ctxCost, {
     type: 'bar',
@@ -873,7 +907,7 @@ Toplam:         ${(metrics.perfTiming?.total || 0).toFixed(0)}ms
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        title: { display: true, text: 'En Yüksek Mali Etkiye Sahip 5 Kalem', color: '#94a3b8' }
+        title: { display: true, text: 'En Yüksek Etkiye Sahip 10 Kalem', color: '#94a3b8' }
       },
       scales: {
         y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
@@ -948,7 +982,10 @@ function renderTable() {
 
     html += `<tr onclick="toggleDetail(${i})">
       <td class="poz">${d.positionCode}</td>
-      <td class="item-name">${d.itemName}</td>
+      <td class="item-name">
+        ${d.itemName}
+        ${d.confidence > 0 && d.confidence < 0.95 ? `<br><span style="font-size: 11px; font-weight: 600; color: #D97706; background: rgba(217, 119, 6, 0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">⚠️ Şüpheli Eşleşme (Güven: %${Math.round(d.confidence*100)})</span>` : ''}
+      </td>
       <td><span class="badge badge-${d.cat}">${CATEGORIES[d.cat].label}</span></td>
       <td><span class="badge badge-${d.severity}">${d.severity.charAt(0).toUpperCase() + d.severity.slice(1)}</span></td>
       <td>${d.v1Qty.toFixed(2)} ${d.v1Unit}</td>
@@ -983,7 +1020,7 @@ function renderTable() {
             </div>
             <div>
               <div class="dlabel">Eşleştirme Güvenliği</div>
-              <div class="dval">${(d.v1Item && d.v2Item ? '98%' : (d.v1Item || d.v2Item ? 'Eşleşmemiş' : '-'))}</div>
+              <div class="dval">${(d.v1Item && d.v2Item ? (d.confidence ? '%'+Math.round(d.confidence*100) : '%100') : (d.v1Item || d.v2Item ? 'Eşleşmemiş' : '-'))}</div>
             </div>
             <div>
               <div class="dlabel">V1 Mahal</div>
