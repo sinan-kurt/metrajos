@@ -391,8 +391,8 @@ function showMappingUI() {
 
     html += `<tr>
       <td>${field.label}</td>
-      <td><select data-version="1" data-field="${field.key}"><option>-</option>${p1.headers.map((h, i) => `<option value="${i}" ${v1Idx === i ? 'selected' : ''}>${h}</option>`).join('')}</select></td>
-      <td><select data-version="2" data-field="${field.key}"><option>-</option>${p2.headers.map((h, i) => `<option value="${i}" ${v2Idx === i ? 'selected' : ''}>${h}</option>`).join('')}</select></td>
+      <td><select data-version="1" data-field="${field.key}"><option>-</option>${p1.headers.map((h, i) => `<option value="${i}" ${v1Idx === i ? 'selected' : ''}>${escapeHtml(h)}</option>`).join('')}</select></td>
+      <td><select data-version="2" data-field="${field.key}"><option>-</option>${p2.headers.map((h, i) => `<option value="${i}" ${v2Idx === i ? 'selected' : ''}>${escapeHtml(h)}</option>`).join('')}</select></td>
       <td><span class="status-badge status-${status}">${statusText}</span></td>
     </tr>`;
   });
@@ -419,7 +419,7 @@ function showMappingUI() {
   let whtml = '';
   if (warnings.length > 0) {
     whtml = '<div class="warnings-box"><strong>Uyarılar:</strong>';
-    warnings.forEach(w => whtml += `<div class="warning-item">${w}</div>`);
+    warnings.forEach(w => whtml += `<div class="warning-item">${escapeHtml(w)}</div>`);
     whtml += '</div>';
   }
   document.getElementById('warningsBox').innerHTML = whtml;
@@ -432,7 +432,7 @@ function showMappingUI() {
         <table>`;
     state.importLog.forEach(log => {
       const rowClass = `log-${log.type}`;
-      logHtml += `<tr class="${rowClass}"><td>Satır ${log.row}</td><td>${log.reason}</td></tr>`;
+      logHtml += `<tr class="${rowClass}"><td>Satır ${log.row}</td><td>${escapeHtml(log.reason)}</td></tr>`;
     });
     logHtml += `</table></div></div>`;
   }
@@ -573,9 +573,9 @@ function matchItems(baseItems, compItems, threshold = 0.72) {
 function getExplanation(diff) {
   switch (diff.cat) {
     case 'added':
-      return `Bu kalem V1'de bulunmuyor. V2'de yeni eklenmiş. Birim: ${diff.v2Unit}, Miktar: ${diff.v2Qty}`;
+      return `Bu kalem V1'de bulunmuyor. V2'de yeni eklenmiş. Birim: ${escapeHtml(diff.v2Unit)}, Miktar: ${diff.v2Qty}`;
     case 'removed':
-      return `Bu kalem V2'de bulunmuyor. Revizyon sırasında çıkarılmış. Eski Birim: ${diff.v1Unit}, Eski Miktar: ${diff.v1Qty}`;
+      return `Bu kalem V2'de bulunmuyor. Revizyon sırasında çıkarılmış. Eski Birim: ${escapeHtml(diff.v1Unit)}, Eski Miktar: ${diff.v1Qty}`;
     case 'increased':
       const upPercent = ((diff.v2Qty - diff.v1Qty) / diff.v1Qty * 100).toFixed(1);
       return `Miktar ${diff.v1Qty} → ${diff.v2Qty} (↑${upPercent}%). Birim Fiyat: ${diff.v1Item?.unitPrice || 0}₺`;
@@ -583,11 +583,11 @@ function getExplanation(diff) {
       const downPercent = ((diff.v2Qty - diff.v1Qty) / diff.v1Qty * 100).toFixed(1);
       return `Miktar ${diff.v1Qty} → ${diff.v2Qty} (↓${Math.abs(downPercent)}%). Birim Fiyat: ${diff.v1Item?.unitPrice || 0}₺`;
     case 'name_changed':
-      return `Kalem adı değişti: '${diff.v1Item?.itemName}' → '${diff.v2Item?.itemName}'. Miktar: ${diff.v1Qty} ${diff.v1Unit}`;
+      return `Kalem adı değişti: '${escapeHtml(diff.v1Item?.itemName)}' → '${escapeHtml(diff.v2Item?.itemName)}'. Miktar: ${diff.v1Qty} ${escapeHtml(diff.v1Unit)}`;
     case 'unit_changed':
-      return `Birim değişti: ${diff.v1Unit} → ${diff.v2Unit}. Miktarlar karşılaştırılamaz. Manuel inceleme gerekli.`;
+      return `Birim değişti: ${escapeHtml(diff.v1Unit)} → ${escapeHtml(diff.v2Unit)}. Miktarlar karşılaştırılamaz. Manuel inceleme gerekli.`;
     case 'unchanged':
-      return `Kalem her iki revizyonda da aynı: ${diff.v1Qty} ${diff.v1Unit}, ${diff.v1Item?.unitPrice || 0}₺/birim`;
+      return `Kalem her iki revizyonda da aynı: ${diff.v1Qty} ${escapeHtml(diff.v1Unit)}, ${diff.v1Item?.unitPrice || 0}₺/birim`;
     default:
       return '';
   }
@@ -885,7 +885,7 @@ Toplam:         ${(metrics.perfTiming?.total || 0).toFixed(0)}ms
 
   let discHtml = '<option value="">Tüm Disiplinler</option>';
   s.disciplines.forEach(d => {
-    discHtml += `<option value="${d}">${d}</option>`;
+    discHtml += `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`;
   });
   document.getElementById('filterDiscipline').innerHTML = discHtml;
 
