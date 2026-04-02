@@ -4,13 +4,9 @@ import html2pdf from 'html2pdf.js';
 
 function escapeHtml(unsafe) {
   if (unsafe === null || unsafe === undefined) return '';
-  if (typeof unsafe !== 'string') unsafe = String(unsafe);
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  const div = document.createElement('div');
+  div.textContent = String(unsafe);
+  return div.innerHTML;
 }
 
 const state = {
@@ -1397,16 +1393,15 @@ function saveSession() {
     })),
     timestamp: Date.now()
   };
-  // sessionData to base64
-  const encoded = btoa(encodeURIComponent(JSON.stringify(sessionData)));
-  localStorage.setItem('metraj_session', encoded);
+  // Removed base64; changing from local to session storage to limit data lifetime
+  sessionStorage.setItem('metraj_session', JSON.stringify(sessionData));
 }
 
 function loadPastSession() {
-  const data = localStorage.getItem('metraj_session');
+  const data = sessionStorage.getItem('metraj_session');
   if(!data) return;
   try {
-    const sessionData = JSON.parse(decodeURIComponent(atob(data)));
+    const sessionData = JSON.parse(data);
     state.allDiffs = sessionData.allDiffs;
     state.diffs = [...state.allDiffs];
     state.summary = sessionData.summary;
@@ -1419,7 +1414,7 @@ function loadPastSession() {
 }
 
 function clearPastSession() {
-  localStorage.removeItem('metraj_session');
+  sessionStorage.removeItem('metraj_session');
   document.getElementById('sessionLoaderContainer').innerHTML = '';
 }
 
@@ -1427,10 +1422,10 @@ function initUI() {
   if (localStorage.getItem('metraj_dark_mode') === 'true') {
     document.body.classList.add('dark-mode');
   }
-  const data = localStorage.getItem('metraj_session');
+  const data = sessionStorage.getItem('metraj_session');
   if(data) {
     try {
-      const sessionData = JSON.parse(decodeURIComponent(atob(data)));
+      const sessionData = JSON.parse(data);
       const d = new Date(sessionData.timestamp).toLocaleString('tr-TR');
       document.getElementById('sessionLoaderContainer').innerHTML = `
         <div class="session-loader">
