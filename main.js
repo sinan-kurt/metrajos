@@ -2,6 +2,17 @@ import * as XLSX from 'xlsx';
 import Chart from 'chart.js/auto';
 import html2pdf from 'html2pdf.js';
 
+function escapeHtml(unsafe) {
+  if (unsafe === null || unsafe === undefined) return '';
+  if (typeof unsafe !== 'string') unsafe = String(unsafe);
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const state = {
   workbooks: [null, null],
   selectedSheets: [null, null],
@@ -300,7 +311,7 @@ function handleFile(version, input) {
       state.selectedSheets[version - 1] = workbook.SheetNames[0];
 
       const infoDiv = document.getElementById('infoV' + version);
-      infoDiv.innerHTML = `<strong>${file.name}</strong><br>${file.size} bytes<br>${workbook.SheetNames.length} sheet${workbook.SheetNames.length > 1 ? 's' : ''}`;
+      infoDiv.innerHTML = `<strong>${escapeHtml(file.name)}</strong><br>${file.size} bytes<br>${workbook.SheetNames.length} sheet${workbook.SheetNames.length > 1 ? 's' : ''}`;
       infoDiv.style.display = 'block';
 
       document.getElementById('sheetSelV' + version).style.display = 'block';
@@ -443,18 +454,18 @@ function showPreview(parsed, version) {
   const previewData = data.slice(0, 5);
 
   let html = '<tr>';
-  if (mapping.positionCode >= 0) html += `<th>${headers[mapping.positionCode]}</th>`;
-  if (mapping.itemName >= 0) html += `<th>${headers[mapping.itemName]}</th>`;
-  if (mapping.quantity >= 0) html += `<th>${headers[mapping.quantity]}</th>`;
-  if (mapping.unit >= 0) html += `<th>${headers[mapping.unit]}</th>`;
+  if (mapping.positionCode >= 0) html += `<th>${escapeHtml(headers[mapping.positionCode])}</th>`;
+  if (mapping.itemName >= 0) html += `<th>${escapeHtml(headers[mapping.itemName])}</th>`;
+  if (mapping.quantity >= 0) html += `<th>${escapeHtml(headers[mapping.quantity])}</th>`;
+  if (mapping.unit >= 0) html += `<th>${escapeHtml(headers[mapping.unit])}</th>`;
   html += '</tr>';
 
   previewData.forEach(row => {
     html += '<tr>';
-    if (mapping.positionCode >= 0) html += `<td>${row[headers[mapping.positionCode]] || ''}</td>`;
-    if (mapping.itemName >= 0) html += `<td>${row[headers[mapping.itemName]] || ''}</td>`;
-    if (mapping.quantity >= 0) html += `<td>${row[headers[mapping.quantity]] || ''}</td>`;
-    if (mapping.unit >= 0) html += `<td>${row[headers[mapping.unit]] || ''}</td>`;
+    if (mapping.positionCode >= 0) html += `<td>${escapeHtml(row[headers[mapping.positionCode]] || '')}</td>`;
+    if (mapping.itemName >= 0) html += `<td>${escapeHtml(row[headers[mapping.itemName]] || '')}</td>`;
+    if (mapping.quantity >= 0) html += `<td>${escapeHtml(row[headers[mapping.quantity]] || '')}</td>`;
+    if (mapping.unit >= 0) html += `<td>${escapeHtml(row[headers[mapping.unit]] || '')}</td>`;
     html += '</tr>';
   });
 
@@ -478,57 +489,58 @@ function itemsFromParsed(parsed, mapping) {
 function matchItems(baseItems, compItems, threshold = 0.72) {
   const matches = [];
   const usedComp = new Set();
+  
+  const compByPositionCode = new Map();
+  for (let i = 0; i < compItems.length; i++) {
+    const comp = compItems[i];
+    if (comp.positionCode) {
+      if (!compByPositionCode.has(comp.positionCode)) {
+        compByPositionCode.set(comp.positionCode, []);
+      }
+      compByPositionCode.get(comp.positionCode).push(i);
+    }
+  }
 
   for (const base of baseItems) {
-    for (let i = 0; i < compItems.length; i++) {
-      if (usedComp.has(i)) continue;
-      const comp = compItems[i];
-      if (base.positionCode && base.positionCode === comp.positionCode && normalizeItemName(base.itemName) === normalizeItemName(comp.itemName)) {
+    if (!base.positionCode) continue;
+    const candidates = compByPositionCode.get(base.positionCode);
+    if (!candidates) continue;
+    
+    for (const idx of candidates) {
+      if (usedComp.has(idx)) continue;
+      const comp = compItems[idx];
+      if (normalizeItemName(base.itemName) === normalizeItemName(comp.itemName)) {
         matches.push({ base, comp, confidence: 1 });
-        usedComp.add(i);
+        usedComp.add(idx);
+        base._matched = true;
         break;
       }
     }
   }
 
   for (const base of baseItems) {
-    if (matches.some(m => m.base === base)) continue;
-    if (!base.positionCode) continue;
-    for (let i = 0; i < compItems.length; i++) {
-      if (usedComp.has(i)) continue;
-      const comp = compItems[i];
-      if (base.positionCode === comp.positionCode) {
-        const sim = calculateSimilarity(base.itemName, comp.itemName);
-        if (sim >= threshold) {
-          matches.push({ base, comp, confidence: sim });
-          usedComp.add(i);
-          break;
-        }
+    if (base._matched || !base.positionCode) continue;
+    const candidates = compByPositionCode.get(base.positionCode);
+    if (!candidates) continue;
+    
+    for (const idx of candidates) {
+      if (usedComp.has(idx)) continue;
+      const comp = compItems[idx];
+      const sim = calculateSimilarity(base.itemName, comp.itemName);
+      if (sim >= threshold) {
+        matches.push({ base, comp, confidence: sim });
+        usedComp.add(idx);
+        base._matched = true;
+        break;
       }
     }
   }
 
   for (const base of baseItems) {
-    if (matches.some(m => m.base === base)) continue;
-    if (base.positionCode) continue;
-    for (let i = 0; i < compItems.length; i++) {
-      if (usedComp.has(i)) continue;
-      const comp = compItems[i];
-      if (!comp.positionCode) {
-        const sim = calculateSimilarity(base.itemName, comp.itemName);
-        if (sim >= threshold) {
-          matches.push({ base, comp, confidence: sim });
-          usedComp.add(i);
-          break;
-        }
-      }
-    }
-  }
-
-  for (const base of baseItems) {
-    if (matches.some(m => m.base === base)) continue;
+    if (base._matched) continue;
     let bestMatch = null;
     let bestSim = 0;
+    
     for (let i = 0; i < compItems.length; i++) {
       if (usedComp.has(i)) continue;
       const comp = compItems[i];
@@ -538,16 +550,19 @@ function matchItems(baseItems, compItems, threshold = 0.72) {
         bestMatch = i;
       }
     }
+    
     if (bestSim >= threshold && bestMatch !== null) {
       matches.push({ base, comp: compItems[bestMatch], confidence: bestSim });
       usedComp.add(bestMatch);
+      base._matched = true;
     }
   }
 
   for (const base of baseItems) {
-    if (!matches.some(m => m.base === base)) {
+    if (!base._matched) {
       matches.push({ base, comp: null, confidence: 0 });
     }
+    delete base._matched;
   }
 
   for (let i = 0; i < compItems.length; i++) {
@@ -981,15 +996,15 @@ function renderTable() {
 
 
     html += `<tr onclick="toggleDetail(${i})">
-      <td class="poz">${d.positionCode}</td>
+      <td class="poz">${escapeHtml(d.positionCode)}</td>
       <td class="item-name">
-        ${d.itemName}
+        ${escapeHtml(d.itemName)}
         ${d.confidence > 0 && d.confidence < 0.95 ? `<br><span style="font-size: 11px; font-weight: 600; color: #D97706; background: rgba(217, 119, 6, 0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">⚠️ Şüpheli Eşleşme (Güven: %${Math.round(d.confidence*100)})</span>` : ''}
       </td>
       <td><span class="badge badge-${d.cat}">${CATEGORIES[d.cat].label}</span></td>
       <td><span class="badge badge-${d.severity}">${d.severity.charAt(0).toUpperCase() + d.severity.slice(1)}</span></td>
-      <td>${d.v1Qty.toFixed(2)} ${d.v1Unit}</td>
-      <td>${d.v2Qty.toFixed(2)} ${d.v2Unit}</td>
+      <td>${d.v1Qty.toFixed(2)} ${escapeHtml(d.v1Unit)}</td>
+      <td>${d.v2Qty.toFixed(2)} ${escapeHtml(d.v2Unit)}</td>
       <td class="${deltaCls}">${d.deltaQty > 0 ? '+' : ''}${d.deltaQty.toFixed(2)} (${d.deltaPercent.toFixed(0)}%)</td>
       <td>
         <input type="number" 
@@ -1012,11 +1027,11 @@ function renderTable() {
           <div class="detail-grid">
             <div>
               <div class="dlabel">V1 Disiplin</div>
-              <div class="dval">${v1Disc}</div>
+              <div class="dval">${escapeHtml(v1Disc)}</div>
             </div>
             <div>
               <div class="dlabel">V2 Disiplin</div>
-              <div class="dval">${v2Disc}</div>
+              <div class="dval">${escapeHtml(v2Disc)}</div>
             </div>
             <div>
               <div class="dlabel">Eşleştirme Güvenliği</div>
@@ -1024,11 +1039,11 @@ function renderTable() {
             </div>
             <div>
               <div class="dlabel">V1 Mahal</div>
-              <div class="dval">${v1Zone}</div>
+              <div class="dval">${escapeHtml(v1Zone)}</div>
             </div>
             <div>
               <div class="dlabel">V2 Mahal</div>
-              <div class="dval">${v2Zone}</div>
+              <div class="dval">${escapeHtml(v2Zone)}</div>
             </div>
             <div></div>
             <div class="detail-explanation">
@@ -1382,14 +1397,16 @@ function saveSession() {
     })),
     timestamp: Date.now()
   };
-  localStorage.setItem('metraj_session', JSON.stringify(sessionData));
+  // sessionData to base64
+  const encoded = btoa(encodeURIComponent(JSON.stringify(sessionData)));
+  localStorage.setItem('metraj_session', encoded);
 }
 
 function loadPastSession() {
   const data = localStorage.getItem('metraj_session');
   if(!data) return;
   try {
-    const sessionData = JSON.parse(data);
+    const sessionData = JSON.parse(decodeURIComponent(atob(data)));
     state.allDiffs = sessionData.allDiffs;
     state.diffs = [...state.allDiffs];
     state.summary = sessionData.summary;
@@ -1413,7 +1430,7 @@ function initUI() {
   const data = localStorage.getItem('metraj_session');
   if(data) {
     try {
-      const sessionData = JSON.parse(data);
+      const sessionData = JSON.parse(decodeURIComponent(atob(data)));
       const d = new Date(sessionData.timestamp).toLocaleString('tr-TR');
       document.getElementById('sessionLoaderContainer').innerHTML = `
         <div class="session-loader">
