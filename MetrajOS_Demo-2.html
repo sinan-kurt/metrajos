@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MetrajOS — Enhanced MVP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --primary: #1B4F72;
+  --primary-light: #2471A3;
+  --accent: #2E86C1;
+  --accent-light: #5DADE2;
+  --dark: #0D2137;
+  --surface: #F8FAFC;
+  --text: #1E293B;
+  --muted: #64748B;
+  --border: #E2E8F0;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --blue: #2563EB;
+  --purple: #7C3AED;
+  --pink: #DB2777;
+  --bg: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+.nav {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.logo-text span {
+  color: var(--accent-light);
+}
+
+.nav-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.step.active .step-number {
+  background: var(--accent);
+  color: #fff;
+}
+
+.step.completed .step-number {
+  background: var(--success);
+  color: #fff;
+}
+
+.step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.step.active .step-label {
+  color: var(--accent);
+}
+
+.step-divider {
+  width: 20px;
+  height: 2px;
+  background: var(--border);
+  margin-top: 14px;
+}
+
+.step.completed .step-divider {
+  background: var(--success);
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.demo-banner {
+  background: linear-gradient(135deg, rgba(46, 134, 193, 0.08), rgba(46, 134, 193, 0.03));
+  border: 1px solid rgba(46, 134, 193, 0.2);
+  border-radius: 16px;
+  padding: 32px 24px;
+  margin-bottom: 32px;
+}
+
+.demo-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+
+.demo-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.demo-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.demo-card {
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.demo-card:hover {
+  border-color: var(--accent);
+  background: rgba(46, 134, 193, 0.03);
+  transform: translateY(-2px);
+}
+
+.demo-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.demo-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.demo-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.demo-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.demo-divider::before,
+.demo-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.upload-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 800px) {
+  .upload-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.upload-box {
+  background: #fff;
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.upload-box:hover,
+.upload-box.dragover {
+  border-color: var(--accent);
+  background: rgba(46, 134, 193, 0.03);
+}
+
+.upload-box.loaded {
+  border-color: var(--success);
+  border-style: solid;
+  background: rgba(5, 150, 105, 0.03);
+}
+
+.upload-box h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.upload-box p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.upload-box .file-info {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(5, 150, 105, 0.08);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.upload-box input[type="file"] {
+  display: none;
+}
+
+.upload-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.v1-icon {
+  background: rgba(27, 79, 114, 0.2);
+  color: var(--primary);
+}
+
+.v2-icon {
+  background: rgba(46, 134, 193, 0.2);
+  color: var(--accent);
+}
+
+.sheet-select {
+  margin-top: 12px;
+}
+
+.sheet-select select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  width: 100%;
+  background: #fff;
+  color: var(--text);
+}
+
+.action-bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(46, 134, 193, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+  background: rgba(46, 134, 193, 0.02);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.mapping-section {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.mapping-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 16px;
+}
+
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.mapping-table th {
+  background: var(--surface);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.mapping-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.mapping-table select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-ok {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--success);
+}
+
+.status-error {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--danger);
+}
+
+.status-warning {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--warning);
+}
+
+.preview-section {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.preview-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 12px;
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.preview-table th {
+  background: var(--surface);
+  padding: 8px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.warnings-box {
+  background: rgba(217, 119, 6, 0.05);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--warning);
+}
+
+.warnings-box strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dark);
+}
+
+.warning-item {
+  margin: 4px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.warning-item:before {
+  content: "⚠";
+  position: absolute;
+  left: 0;
+}
+
+.import-log {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.log-header {
+  padding: 12px 16px;
+  background: var(--surface);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-header:hover {
+  background: #f0f4f8;
+}
+
+.log-body {
+  display: none;
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.log-body.visible {
+  display: block;
+}
+
+.log-body table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.log-body tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.log-body td {
+  padding: 8px;
+}
+
+.log-body td:first-child {
+  font-weight: 600;
+  color: var(--text);
+  min-width: 60px;
+}
+
+.log-skip { color: var(--muted); }
+.log-warning { color: var(--warning); }
+.log-normalize { color: var(--blue); }
+.log-duplicate { color: var(--danger); }
+
+.kpi-panel {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.kpi-row {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.kpi-row.kpi-main {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.kpi-row.kpi-categories {
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+.kpi-card {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.kpi-large {
+  padding: 20px;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+
+.kpi-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.kpi-positive { color: var(--danger); }
+.kpi-negative { color: var(--success); }
+.kpi-attention { background: rgba(217, 119, 6, 0.05); border-color: rgba(217, 119, 6, 0.2); }
+
+.results {
+  display: none;
+}
+
+.results.visible {
+  display: block;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.filter-bar select,
+.filter-bar input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+  color: var(--text);
+}
+
+.filter-bar input {
+  min-width: 200px;
+}
+
+.filter-bar .count {
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.perf-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.perf-header {
+  padding: 12px 16px;
+  background: var(--surface);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+}
+
+.perf-header:hover {
+  background: #f0f4f8;
+}
+
+.perf-body {
+  display: none;
+  padding: 16px;
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text);
+  line-height: 1.8;
+}
+
+.perf-body.visible {
+  display: block;
+}
+
+.diff-table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 24px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.diff-table th {
+  background: var(--surface);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.diff-table td {
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.diff-table tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.diff-table tr:hover {
+  background: rgba(46, 134, 193, 0.02);
+}
+
+.diff-table .poz {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.diff-table .item-name {
+  font-weight: 600;
+  color: var(--dark);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-added { background: rgba(5, 150, 105, 0.1); color: var(--success); }
+.badge-removed { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+.badge-increased { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
+.badge-decreased { background: rgba(37, 99, 235, 0.1); color: var(--blue); }
+.badge-unchanged { background: rgba(148, 163, 184, 0.12); color: var(--muted); }
+.badge-name_changed { background: rgba(139, 92, 246, 0.1); color: #8B5CF6; }
+.badge-unit_changed { background: rgba(124, 58, 237, 0.1); color: var(--purple); }
+.badge-duplicate_suspect { background: rgba(219, 39, 119, 0.1); color: var(--pink); }
+.badge-critical { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+.badge-high { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
+.badge-medium { background: rgba(234, 179, 8, 0.1); color: #B45309; }
+.badge-low { background: rgba(5, 150, 105, 0.1); color: var(--success); }
+
+.delta-pos { color: var(--danger); font-weight: 700; }
+.delta-neg { color: var(--success); font-weight: 700; }
+.delta-neutral { color: var(--muted); }
+
+.detail-row td {
+  background: #f8fafc;
+  padding: 14px 20px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-grid .dlabel {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.detail-grid .dval {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark);
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.detail-explanation {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  background: rgba(46, 134, 193, 0.04);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.feedback-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.fb-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.fb-correct:hover { border-color: var(--success); background: rgba(5, 150, 105, 0.05); }
+.fb-wrong:hover { border-color: var(--danger); background: rgba(220, 38, 38, 0.05); }
+.fb-note:hover { border-color: var(--accent); background: rgba(46, 134, 193, 0.05); }
+
+.feedback-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  box-shadow: 0 4px 16px rgba(46, 134, 193, 0.4);
+  transition: all 0.2s;
+  z-index: 50;
+}
+
+.feedback-fab:hover {
+  background: var(--primary);
+  transform: scale(1.1);
+}
+
+.export-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.visible {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 16px;
+}
+
+.modal-body {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.modal-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-form select,
+.modal-form textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+}
+
+.modal-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-results {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-family: monospace;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.test-pass { color: var(--success); font-weight: 600; }
+.test-fail { color: var(--danger); font-weight: 600; }
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--success);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 999;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@media print {
+  .nav, .action-bar, .filter-bar, .export-bar, .btn, .demo-banner, .feedback-fab {
+    display: none !important;
+  }
+  body { background: #fff; }
+  .container { padding: 0; }
+  .diff-table-wrap { max-height: none; }
+  .diff-table tr { cursor: default; }
+  .kpi-panel, .stat-grid, .severity-grid, .diff-table-wrap {
+    page-break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-icon">M</div>
+      <div class="logo-text">Metraj<span>OS</span></div>
+    </div>
+    <div class="nav-badge">Enhanced MVP v2.0</div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="step-indicator">
+    <div class="step active" id="step1Indicator">
+      <div class="step-number">1</div>
+      <div class="step-label">Dosya Yükle</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2Indicator">
+      <div class="step-number">2</div>
+      <div class="step-label">Sütun Eşleştir</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3Indicator">
+      <div class="step-number">3</div>
+      <div class="step-label">Sonuçlar</div>
+    </div>
+  </div>
+
+  <div class="section active" id="section1">
+    <div class="demo-banner">
+      <div class="demo-title">🎯 Hemen Deneyin</div>
+      <div class="demo-subtitle">Hazır senaryolardan birini seçerek ürünü keşfedin</div>
+      <div class="demo-cards">
+        <div class="demo-card" onclick="loadDemo('revision')">
+          <div class="demo-icon">📋</div>
+          <div class="demo-name">Revizyon Farkı</div>
+          <div class="demo-desc">12 kalem, miktar ve isim değişiklikleri</div>
+        </div>
+        <div class="demo-card" onclick="loadDemo('addremove')">
+          <div class="demo-icon">➕➖</div>
+          <div class="demo-name">Ekleme / Çıkarma</div>
+          <div class="demo-desc">Yoğun ekleme/silme senaryosu</div>
+        </div>
+        <div class="demo-card" onclick="loadDemo('unitname')">
+          <div class="demo-icon">⚠️</div>
+          <div class="demo-name">Birim & İsim Karmaşası</div>
+          <div class="demo-desc">Birim dönüşümleri ve isim farklılıkları</div>
+        </div>
+      </div>
+      <div class="demo-divider"><span>veya kendi dosyanızı yükleyin</span></div>
+    </div>
+
+    <div class="upload-section">
+      <div class="upload-box" id="dropV1" onclick="document.getElementById('fileV1').click()">
+        <input type="file" id="fileV1" accept=".xlsx,.xls" onchange="handleFile(1, this)">
+        <div class="upload-icon v1-icon">V1</div>
+        <h3>Temel Metraj (V1)</h3>
+        <p>İlk versiyon Excel dosyasını yükleyin</p>
+        <div class="file-info" id="infoV1" style="display: none;"></div>
+        <div class="sheet-select" id="sheetSelV1" style="display: none;">
+          <select id="sheetsV1" onchange="selectSheet(1)"></select>
+        </div>
+      </div>
+      <div class="upload-box" id="dropV2" onclick="document.getElementById('fileV2').click()">
+        <input type="file" id="fileV2" accept=".xlsx,.xls" onchange="handleFile(2, this)">
+        <div class="upload-icon v2-icon">V2</div>
+        <h3>Revize Metraj (V2)</h3>
+        <p>Karşılaştırılacak Excel dosyasını yükleyin</p>
+        <div class="file-info" id="infoV2" style="display: none;"></div>
+        <div class="sheet-select" id="sheetSelV2" style="display: none;">
+          <select id="sheetsV2" onchange="selectSheet(2)"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" id="btnContinueStep1" disabled onclick="goToStep(2)">
+        Devam Et
+      </button>
+    </div>
+  </div>
+
+  <div class="section" id="section2">
+    <div class="mapping-section">
+      <div class="mapping-title">Sütun Eşleştirmesi</div>
+      <div id="importLogSection"></div>
+      <div id="warningsBox"></div>
+      <table class="mapping-table" id="mappingTable"></table>
+      <div class="preview-section">
+        <div class="preview-title">V1 İlk 5 Satır (Önizleme)</div>
+        <div style="overflow-x: auto;">
+          <table class="preview-table" id="previewV1"></table>
+        </div>
+        <div class="preview-title" style="margin-top: 16px;">V2 İlk 5 Satır (Önizleme)</div>
+        <div style="overflow-x: auto;">
+          <table class="preview-table" id="previewV2"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-outline" onclick="goToStep(1)">Geri Dön</button>
+      <button class="btn btn-primary" id="btnContinueStep2" disabled onclick="goToStep(3)">
+        Karşılaştır
+      </button>
+    </div>
+  </div>
+
+  <div class="section" id="section3">
+    <div class="kpi-panel" id="kpiPanel"></div>
+    <div id="perfPanelSection"></div>
+
+    <div class="filter-bar">
+      <select id="filterCategory" onchange="applyFilters()">
+        <option value="">Tüm Kategoriler</option>
+        <option value="added">Eklenen</option>
+        <option value="removed">Kaldırılan</option>
+        <option value="increased">Artan</option>
+        <option value="decreased">Azalan</option>
+        <option value="unchanged">Değişmeyen</option>
+        <option value="name_changed">İsim Değişti</option>
+        <option value="unit_changed">Birim Değişti</option>
+        <option value="duplicate_suspect">Şüpheli Kopya</option>
+      </select>
+      <select id="filterSeverity" onchange="applyFilters()">
+        <option value="">Tüm Şiddetler</option>
+        <option value="critical">Kritik</option>
+        <option value="high">Yüksek</option>
+        <option value="medium">Orta</option>
+        <option value="low">Düşük</option>
+      </select>
+      <select id="filterDiscipline" onchange="applyFilters()">
+        <option value="">Tüm Disiplinler</option>
+      </select>
+      <select id="filterSort" onchange="applyFilters()">
+        <option value="severity">Şiddete Göre</option>
+        <option value="amount">Tutara Göre</option>
+        <option value="delta">Fark Yüzdesine Göre</option>
+        <option value="name">İsme Göre</option>
+      </select>
+      <input type="text" id="filterSearch" placeholder="Ara..." onkeyup="applyFilters()">
+      <button class="btn btn-outline btn-small" onclick="clearFilters()">Temizle</button>
+      <span class="count" id="filterCount"></span>
+    </div>
+
+    <div class="export-bar">
+      <button class="btn btn-outline btn-small" onclick="exportExcel()">Excel'e Aktar</button>
+      <button class="btn btn-outline btn-small" onclick="exportFeedback()">Geri Bildir. İndir</button>
+      <button class="btn btn-outline btn-small" onclick="window.print()">PDF Rapor</button>
+    </div>
+
+    <div class="diff-table-wrap">
+      <table class="diff-table">
+        <thead>
+          <tr>
+            <th>Poz No</th>
+            <th>İmalat</th>
+            <th>Kategori</th>
+            <th>Şiddet</th>
+            <th>V1 Miktar</th>
+            <th>V2 Miktar</th>
+            <th>Fark</th>
+            <th>Tutar Farkı</th>
+          </tr>
+        </thead>
+        <tbody id="diffBody"></tbody>
+      </table>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-outline" onclick="goToStep(2)">Geri Dön</button>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <h2>İki Excel dosyası yükleyin</h2>
+    <p>V1 (temel) ve V2 (revize) metraj dosyalarını sürükleyip bırakın veya tıklayarak seçin. Sistem otomatik olarak farkları tespit edecek.</p>
+  </div>
+</div>
+
+<div id="feedbackFab" class="feedback-fab" onclick="openFeedbackModal()">💬</div>
+
+<div class="modal" id="testModal">
+  <div class="modal-content">
+    <div class="modal-title">Test Sonuçları</div>
+    <div class="modal-results" id="testResults"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeTestModal()">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="feedbackModal">
+  <div class="modal-content">
+    <div class="modal-title">Geri Bildirim Gönderin</div>
+    <div class="modal-body">Karşılaştırma sonuçlarını iyileştirmemize yardımcı olun.</div>
+    <div class="modal-form">
+      <select id="feedbackType">
+        <option value="">Geri bildirimin türünü seçin</option>
+        <option value="general">Genel yorum</option>
+        <option value="match_error">Eşleşme hatası</option>
+        <option value="missing_item">Eksik kalem</option>
+        <option value="wrong_qty">Yanlış miktar</option>
+        <option value="other">Diğer</option>
+      </select>
+      <textarea id="feedbackText" placeholder="Açıklayın..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeFeedbackModal()">İptal</button>
+      <button class="btn btn-primary" onclick="submitFeedback()">Gönder</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = {
+  workbooks: [null, null],
+  selectedSheets: [null, null],
+  files: [null, null],
+  parsedItems: [null, null],
+  columnMappings: [null, null],
+  diffs: [],
+  allDiffs: [],
+  summary: null,
+  expandedRow: null,
+  importLog: [],
+  feedback: [],
+  isDemo: false,
+};
+
+const metrics = {
+  sessionId: crypto.randomUUID(),
+  startTime: Date.now(),
+  events: [],
+
+  track(event, data = {}) {
+    this.events.push({
+      ts: Date.now(),
+      elapsed: Date.now() - this.startTime,
+      event,
+      ...data
+    });
+  }
+};
+
+const CATEGORIES = {
+  added: { label: 'Eklenen', icon: '+' },
+  removed: { label: 'Kaldırılan', icon: '−' },
+  increased: { label: 'Artan', icon: '↑' },
+  decreased: { label: 'Azalan', icon: '↓' },
+  unchanged: { label: 'Değişmeyen', icon: '=' },
+  name_changed: { label: 'İsim Değişti', icon: '~' },
+  unit_changed: { label: 'Birim Değişti', icon: '⚠' },
+  duplicate_suspect: { label: 'Şüpheli Kopya', icon: '⚡' },
+};
+
+const COL_PATTERNS = {
+  positionCode: ['POZ_NO', 'POZNO', 'POZ NO', 'POZ', 'POSITION CODE', 'ITEM CODE', 'POZ NUMARASI', 'SIRA NO'],
+  itemName: ['IMALAT_ADI', 'İMALAT_ADI', 'IMALATADI', 'İMALATADI', 'IMALAT', 'İMALAT', 'AÇIKLAMA', 'DESCRIPTION', 'MALZEME', 'TANIM', 'İŞ KALEMİ', 'IS KALEMI'],
+  unit: ['BIRIM', 'BİRİM', 'UNIT', 'ÜNITE', 'ÜNİTE', 'OLCU BIRIMI', 'ÖLÇÜ BİRİMİ'],
+  quantity: ['MIKTAR', 'MİKTAR', 'QUANTITY', 'QTY', 'ADET', 'TOPLAM MIKTAR'],
+  unitPrice: ['BIRIM_FIYAT', 'BİRİMFİYAT', 'BIRIMFIYAT', 'BIRIM FIYAT', 'BİRİM FİYAT', 'UNIT PRICE', 'FIYAT', 'FİYAT'],
+  discipline: ['DISIPLIN', 'DİSİPLİN', 'DISCIPLINE', 'BRANŞ', 'BRANS'],
+  zone: ['MAHAL', 'ZONE', 'LOCATION', 'YER', 'MEKAN'],
+};
+
+const UNIT_MAP = {
+  'm2': 'm²', 'm²': 'm²', 'metrekare': 'm²', 'metre kare': 'm²', 'sqm': 'm²',
+  'm3': 'm³', 'm³': 'm³', 'metreküp': 'm³', 'metre küp': 'm³', 'cbm': 'm³',
+  'kg': 'kg', 'kilogram': 'kg', 'kilo': 'kg',
+  't': 'ton', 'ton': 'ton', 'tn': 'ton',
+  'adet': 'adet', 'ad': 'adet', 'piece': 'adet', 'pcs': 'adet',
+  'm': 'm', 'metre': 'm', 'mt': 'm',
+  'cm': 'cm', 'mm': 'mm',
+  'lt': 'lt', 'litre': 'lt', 'liter': 'lt', 'l': 'lt',
+  'tk': 'tk', 'takım': 'tk', 'set': 'set',
+  'saat': 'saat', 'h': 'saat',
+  'gün': 'gün', 'gun': 'gün',
+};
+
+const DEMO_SCENARIOS = {
+  revision: {
+    name: 'Revizyon Farkı',
+    description: 'Klasik revizyon karşılaştırması — miktar değişiklikleri, isim güncellemeleri, birim dönüşümleri',
+    icon: '📋',
+    v1: [
+      { positionCode: '15.150.001', itemName: 'C30 Beton', unit: 'm³', quantity: 120, unitPrice: 2900, discipline: 'Betonarme', zone: 'Temel', rowIndex: 2 },
+      { positionCode: '15.210.005', itemName: 'Nervürlü Donatı', unit: 'kg', quantity: 18500, unitPrice: 14, discipline: 'Betonarme', zone: 'Temel', rowIndex: 3 },
+      { positionCode: '15.310.010', itemName: 'Gazbeton Duvar 19 cm', unit: 'm²', quantity: 640, unitPrice: 780, discipline: 'Duvar', zone: 'Dış Duvar', rowIndex: 4 },
+      { positionCode: '15.410.003', itemName: 'İç Cephe Sıva', unit: 'm²', quantity: 1180, unitPrice: 45, discipline: 'Sıva', zone: 'İç Duvar', rowIndex: 5 },
+      { positionCode: '15.510.002', itemName: 'Seramik Kaplama', unit: 'm²', quantity: 420, unitPrice: 380, discipline: 'Döşeme', zone: 'Döşeme', rowIndex: 6 },
+      { positionCode: '15.610.001', itemName: 'Alçıpan Tavan', unit: 'm²', quantity: 360, unitPrice: 520, discipline: 'Tavan', zone: 'Tavan', rowIndex: 7 },
+      { positionCode: '15.710.004', itemName: 'Boyası', unit: 'm²', quantity: 1250, unitPrice: 28, discipline: 'Boyama', zone: 'İç', rowIndex: 8 },
+      { positionCode: '15.810.006', itemName: 'PVC Doğrama', unit: 'm²', quantity: 96, unitPrice: 1450, discipline: 'Doğrama', zone: 'Cephe', rowIndex: 9 },
+      { positionCode: '15.910.002', itemName: 'Ahşap Kapı', unit: 'adet', quantity: 42, unitPrice: 850, discipline: 'Doğrama', zone: 'İç', rowIndex: 10 },
+      { positionCode: '16.010.003', itemName: 'Kablo Tavası', unit: 'm', quantity: 180, unitPrice: 95, discipline: 'Elektrik', zone: 'Elektrik', rowIndex: 11 },
+      { positionCode: '16.110.001', itemName: 'Klima Seti', unit: 'set', quantity: 18, unitPrice: 12000, discipline: 'HVAC', zone: 'Kuru Alaş', rowIndex: 12 },
+      { positionCode: '16.210.005', itemName: 'Beton Bordür', unit: 'm', quantity: 110, unitPrice: 180, discipline: 'Dış', zone: 'Bahçe', rowIndex: 13 },
+    ],
+    v2: [
+      { positionCode: '15.150.001', itemName: 'C30 Beton', unit: 'm³', quantity: 128, unitPrice: 2900, discipline: 'Betonarme', zone: 'Temel', rowIndex: 2 },
+      { positionCode: '15.210.005', itemName: 'Nervürlü Donatı', unit: 'kg', quantity: 19150, unitPrice: 14, discipline: 'Betonarme', zone: 'Temel', rowIndex: 3 },
+      { positionCode: '15.310.010', itemName: '19 cm Gazbeton Duvar', unit: 'm²', quantity: 640, unitPrice: 780, discipline: 'Duvar', zone: 'Dış Duvar', rowIndex: 4 },
+      { positionCode: '15.410.003', itemName: 'İç Cephe Sıva', unit: 'm²', quantity: 1120, unitPrice: 45, discipline: 'Sıva', zone: 'İç Duvar', rowIndex: 5 },
+      { positionCode: '15.510.002', itemName: 'Seramik Kaplama', unit: 'm²', quantity: 455, unitPrice: 380, discipline: 'Döşeme', zone: 'Döşeme', rowIndex: 6 },
+      { positionCode: '15.610.001', itemName: 'Alçıpan Tavan', unit: 'm²', quantity: 360, unitPrice: 520, discipline: 'Tavan', zone: 'Tavan', rowIndex: 7 },
+      { positionCode: '15.710.004', itemName: 'Boyası', unit: 'm²', quantity: 1325, unitPrice: 28, discipline: 'Boyama', zone: 'İç', rowIndex: 8 },
+      { positionCode: '15.810.006', itemName: 'PVC Doğrama', unit: 'adet', quantity: 28, unitPrice: 1450, discipline: 'Doğrama', zone: 'Cephe', rowIndex: 9 },
+      { positionCode: '15.910.002', itemName: 'Ahşap Kapı', unit: 'adet', quantity: 40, unitPrice: 850, discipline: 'Doğrama', zone: 'İç', rowIndex: 10 },
+      { positionCode: '16.010.003', itemName: 'Kablo Tavası', unit: 'm', quantity: 205, unitPrice: 95, discipline: 'Elektrik', zone: 'Elektrik', rowIndex: 11 },
+      { positionCode: '16.110.001', itemName: 'Klima Seti', unit: 'set', quantity: 20, unitPrice: 12000, discipline: 'HVAC', zone: 'Kuru Alaş', rowIndex: 12 },
+      { positionCode: '16.210.005', itemName: 'Beton Bordür', unit: 'm', quantity: 110, unitPrice: 180, discipline: 'Dış', zone: 'Bahçe', rowIndex: 13 },
+    ],
+  },
+  addremove: {
+    name: 'Ekleme / Çıkarma',
+    description: 'Yoğun ekleme/silme senaryosu',
+    icon: '➕➖',
+    v1: [
+      { positionCode: '20.010.001', itemName: 'Temel Kazı', unit: 'm³', quantity: 1200, unitPrice: 85, discipline: 'Temel', zone: 'Temel', rowIndex: 2 },
+      { positionCode: '20.020.001', itemName: 'Grobeton', unit: 'm³', quantity: 450, unitPrice: 650, discipline: 'Temel', zone: 'Temel', rowIndex: 3 },
+      { positionCode: '20.030.001', itemName: 'Betonarme', unit: 'm³', quantity: 320, unitPrice: 2200, discipline: 'Betonarme', zone: 'Temel', rowIndex: 4 },
+      { positionCode: '20.040.001', itemName: 'Kalıp İşleri', unit: 'm²', quantity: 2800, unitPrice: 95, discipline: 'Kalıp', zone: 'Temel', rowIndex: 5 },
+      { positionCode: '20.050.001', itemName: 'Su Yalıtımı', unit: 'm²', quantity: 1800, unitPrice: 75, discipline: 'Yalıtım', zone: 'Temel', rowIndex: 6 },
+      { positionCode: '20.060.001', itemName: 'Isı Yalıtımı', unit: 'm³', quantity: 380, unitPrice: 320, discipline: 'Yalıtım', zone: 'Temel', rowIndex: 7 },
+      { positionCode: '20.070.001', itemName: 'Drenaj Borusu', unit: 'm', quantity: 850, unitPrice: 120, discipline: 'Drenaj', zone: 'Temel', rowIndex: 8 },
+      { positionCode: '20.080.001', itemName: 'Topraklama', unit: 'adet', quantity: 16, unitPrice: 450, discipline: 'Elektrik', zone: 'Temel', rowIndex: 9 },
+      { positionCode: '20.090.001', itemName: 'Yangın Dolabı', unit: 'adet', quantity: 8, unitPrice: 3200, discipline: 'Yangın', zone: 'Ortak', rowIndex: 10 },
+      { positionCode: '20.100.001', itemName: 'Asansör Kuyusu', unit: 'adet', quantity: 2, unitPrice: 18000, discipline: 'Mekanik', zone: 'Ortak', rowIndex: 11 },
+    ],
+    v2: [
+      { positionCode: '20.010.001', itemName: 'Temel Kazı', unit: 'm³', quantity: 1400, unitPrice: 85, discipline: 'Temel', zone: 'Temel', rowIndex: 2 },
+      { positionCode: '20.020.001', itemName: 'Grobeton', unit: 'm³', quantity: 550, unitPrice: 650, discipline: 'Temel', zone: 'Temel', rowIndex: 3 },
+      { positionCode: '20.030.001', itemName: 'Betonarme', unit: 'm³', quantity: 350, unitPrice: 2200, discipline: 'Betonarme', zone: 'Temel', rowIndex: 4 },
+      { positionCode: '20.040.001', itemName: 'Kalıp İşleri', unit: 'm²', quantity: 3000, unitPrice: 95, discipline: 'Kalıp', zone: 'Temel', rowIndex: 5 },
+      { positionCode: '20.050.001', itemName: 'Su Yalıtımı', unit: 'm²', quantity: 1950, unitPrice: 75, discipline: 'Yalıtım', zone: 'Temel', rowIndex: 6 },
+      { positionCode: '20.110.001', itemName: 'Sondaj Kazığı', unit: 'adet', quantity: 48, unitPrice: 8500, discipline: 'Temel', zone: 'Temel', rowIndex: 7 },
+      { positionCode: '20.120.001', itemName: 'Jet Grout', unit: 'm³', quantity: 220, unitPrice: 1800, discipline: 'Temel', zone: 'Temel', rowIndex: 8 },
+      { positionCode: '20.130.001', itemName: 'Palplanş', unit: 'ton', quantity: 140, unitPrice: 5200, discipline: 'Temel', zone: 'Temel', rowIndex: 9 },
+      { positionCode: '20.090.001', itemName: 'Yangın Dolabı', unit: 'adet', quantity: 9, unitPrice: 3200, discipline: 'Yangın', zone: 'Ortak', rowIndex: 10 },
+      { positionCode: '20.140.001', itemName: 'Zemin İyileştirme', unit: 'm³', quantity: 600, unitPrice: 420, discipline: 'Temel', zone: 'Temel', rowIndex: 11 },
+      { positionCode: '20.150.001', itemName: 'Ankraj Sistemi', unit: 'adet', quantity: 32, unitPrice: 2800, discipline: 'Temel', zone: 'Temel', rowIndex: 12 },
+    ],
+  },
+  unitname: {
+    name: 'Birim & İsim Karmaşası',
+    description: 'Birim dönüşümleri ve isim farklılıkları',
+    icon: '⚠️',
+    v1: [
+      { positionCode: '30.010.001', itemName: 'Çelik Profil HEA200', unit: 'm', quantity: 850, unitPrice: 950, discipline: 'Çelik', zone: 'Yapı', rowIndex: 2 },
+      { positionCode: '30.020.001', itemName: 'Alüminyum Doğrama', unit: 'm²', quantity: 380, unitPrice: 2100, discipline: 'Doğrama', zone: 'Cephe', rowIndex: 3 },
+      { positionCode: '30.030.001', itemName: 'Epoksi Zemin Kaplama', unit: 'm²', quantity: 2400, unitPrice: 180, discipline: 'Döşeme', zone: 'Endüstri', rowIndex: 4 },
+      { positionCode: '30.040.001', itemName: 'Mermer Merdiven Basamak', unit: 'adet', quantity: 28, unitPrice: 4200, discipline: 'Dekorasyon', zone: 'Merdiven', rowIndex: 5 },
+      { positionCode: '30.050.001', itemName: 'Yangın Merdiveni Korkuluk', unit: 'm', quantity: 145, unitPrice: 850, discipline: 'Yangın', zone: 'Yangın Merdiveni', rowIndex: 6 },
+      { positionCode: '30.060.001', itemName: 'Gümrük Demiri', unit: 'kg', quantity: 12500, unitPrice: 18, discipline: 'Demirçilik', zone: 'Pencere', rowIndex: 7 },
+      { positionCode: '30.070.001', itemName: 'Cam Fiber Levha', unit: 'm²', quantity: 350, unitPrice: 280, discipline: 'Yalıtım', zone: 'Duvar', rowIndex: 8 },
+      { positionCode: '30.080.001', itemName: 'Çatı Kaplama Malzeme', unit: 't', quantity: 45, unitPrice: 3100, discipline: 'Çatı', zone: 'Çatı', rowIndex: 9 },
+    ],
+    v2: [
+      { positionCode: '30.010.001', itemName: 'Çelik Profil HEA200', unit: 'ton', quantity: 6.8, unitPrice: 950000, discipline: 'Çelik', zone: 'Yapı', rowIndex: 2 },
+      { positionCode: '30.020.001', itemName: 'Alüminyum Doğrama', unit: 'adet', quantity: 115, unitPrice: 7000, discipline: 'Doğrama', zone: 'Cephe', rowIndex: 3 },
+      { positionCode: '30.030.001', itemName: 'Epoksi Kaplama (Zemin)', unit: 'm²', quantity: 2400, unitPrice: 180, discipline: 'Döşeme', zone: 'Endüstri', rowIndex: 4 },
+      { positionCode: '30.040.001', itemName: 'Doğal Taş Merdiven Kaplaması', unit: 'adet', quantity: 28, unitPrice: 4200, discipline: 'Dekorasyon', zone: 'Merdiven', rowIndex: 5 },
+      { positionCode: '30.050.001', itemName: 'Yangın Merdiveni Korkuluğu', unit: 'm', quantity: 145, unitPrice: 850, discipline: 'Yangın', zone: 'Yangın Merdiveni', rowIndex: 6 },
+      { positionCode: '30.060.001', itemName: 'Gümrük Demiri', unit: 'kg', quantity: 13100, unitPrice: 18, discipline: 'Demirçilik', zone: 'Pencere', rowIndex: 7 },
+      { positionCode: '30.070.001', itemName: 'Cam Fiber Levha', unit: 'm²', quantity: 350, unitPrice: 280, discipline: 'Yalıtım', zone: 'Duvar', rowIndex: 8 },
+      { positionCode: '30.080.001', itemName: 'Çatı Kaplama Malzeme', unit: 't', quantity: 50, unitPrice: 3100, discipline: 'Çatı', zone: 'Çatı', rowIndex: 9 },
+    ],
+  },
+};
+
+function normalizeUnit(val) {
+  if (!val) return '';
+  const s = String(val).toLowerCase().trim();
+  return UNIT_MAP[s] || s;
+}
+
+function normalizeItemName(val) {
+  if (!val) return '';
+  return String(val).toLowerCase().trim();
+}
+
+function parseNumber(val) {
+  if (typeof val === 'number') return val;
+  let s = String(val || '').trim();
+  if (!s) return NaN;
+  s = s.replace(/[\s₺TL$€]/gi, '');
+  if (/^\d{1,3}(\.\d{3})+,\d+$/.test(s)) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (/^\d+,\d+$/.test(s)) {
+    s = s.replace(',', '.');
+  }
+  return parseFloat(s);
+}
+
+function findColumn(headers, patterns) {
+  if (!headers || !patterns) return -1;
+  const normalized = headers.map(h => String(h).toUpperCase().trim());
+
+  for (const pattern of patterns) {
+    const idx = normalized.indexOf(pattern.toUpperCase());
+    if (idx >= 0) return idx;
+  }
+
+  for (const pattern of patterns) {
+    if (pattern.length < 4) continue;
+    for (let i = 0; i < normalized.length; i++) {
+      if (normalized[i].includes(pattern.toUpperCase())) return i;
+    }
+  }
+
+  for (const pattern of patterns) {
+    for (let i = 0; i < normalized.length; i++) {
+      if (normalized[i].length < 4) continue;
+      if (pattern.toUpperCase().includes(normalized[i])) return i;
+    }
+  }
+
+  return -1;
+}
+
+function calculateSimilarity(a, b) {
+  if (!a || !b) return 0;
+  const aLower = normalizeItemName(a);
+  const bLower = normalizeItemName(b);
+  if (aLower === bLower) return 1;
+
+  const aWords = aLower.split(/\s+/);
+  const bWords = bLower.split(/\s+/);
+  const common = aWords.filter(w => bWords.includes(w)).length;
+  const total = Math.max(aWords.length, bWords.length);
+
+  return total > 0 ? common / total : 0;
+}
+
+function detectDuplicateRows(items) {
+  const seen = new Map();
+  const duplicates = [];
+  for (const item of items) {
+    const key = [item.positionCode || '', normalizeItemName(item.itemName), item.quantity, normalizeUnit(item.unit)].join('||');
+    if (seen.has(key)) {
+      duplicates.push({ item, firstOccurrence: seen.get(key) });
+    } else {
+      seen.set(key, item.rowIndex);
+    }
+  }
+  return duplicates;
+}
+
+['dropV1', 'dropV2'].forEach((id, idx) => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    el.classList.add('dragover');
+  });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+      const input = document.getElementById('fileV' + (idx + 1));
+      input.files = e.dataTransfer.files;
+      handleFile(idx + 1, input);
+    }
+  });
+});
+
+function loadDemo(scenarioKey) {
+  metrics.track('demo_load', { scenario: scenarioKey });
+  const scenario = DEMO_SCENARIOS[scenarioKey];
+  if (!scenario) return;
+
+  state.isDemo = true;
+  state.parsedItems[0] = scenario.v1;
+  state.parsedItems[1] = scenario.v2;
+
+  state.columnMappings[0] = {
+    headers: ['positionCode', 'itemName', 'unit', 'quantity', 'unitPrice', 'discipline', 'zone'],
+    mapping: { positionCode: 0, itemName: 1, unit: 2, quantity: 3, unitPrice: 4, discipline: 5, zone: 6 }
+  };
+  state.columnMappings[1] = {
+    headers: ['positionCode', 'itemName', 'unit', 'quantity', 'unitPrice', 'discipline', 'zone'],
+    mapping: { positionCode: 0, itemName: 1, unit: 2, quantity: 3, unitPrice: 4, discipline: 5, zone: 6 }
+  };
+
+  goToStep(3);
+}
+
+function handleFile(version, input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  metrics.track('file_upload', { version, fileName: file.name, fileSize: file.size });
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const workbook = XLSX.read(e.target.result, { type: 'array' });
+      state.workbooks[version - 1] = workbook;
+      state.files[version - 1] = file;
+
+      const sheetSelect = document.getElementById('sheetsV' + version);
+      sheetSelect.innerHTML = '';
+      workbook.SheetNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.text = name;
+        sheetSelect.appendChild(opt);
+      });
+
+      state.selectedSheets[version - 1] = workbook.SheetNames[0];
+
+      const infoDiv = document.getElementById('infoV' + version);
+      infoDiv.innerHTML = `<strong>${file.name}</strong><br>${file.size} bytes<br>${workbook.SheetNames.length} sheet${workbook.SheetNames.length > 1 ? 's' : ''}`;
+      infoDiv.style.display = 'block';
+
+      document.getElementById('sheetSelV' + version).style.display = 'block';
+      document.getElementById('dropV' + version).classList.add('loaded');
+
+      checkUploadComplete();
+    } catch (err) {
+      alert('Hata: Dosya yüklenemedi. Excel dosyası olduğundan emin olun.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function selectSheet(version) {
+  const sel = document.getElementById('sheetsV' + version);
+  state.selectedSheets[version - 1] = sel.value;
+}
+
+function checkUploadComplete() {
+  const btn = document.getElementById('btnContinueStep1');
+  btn.disabled = !state.workbooks[0] || !state.workbooks[1];
+}
+
+function parseSheet(version) {
+  const workbook = state.workbooks[version - 1];
+  if (!workbook) return null;
+  const sheetName = state.selectedSheets[version - 1];
+  if (!sheetName) return null;
+  const sheet = workbook.Sheets[sheetName];
+  if (!sheet) return null;
+
+  const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  if (data.length === 0) return null;
+
+  const headers = Object.keys(data[0]);
+
+  const mapping = {};
+  mapping.positionCode = findColumn(headers, COL_PATTERNS.positionCode);
+  mapping.itemName = findColumn(headers, COL_PATTERNS.itemName);
+  mapping.unit = findColumn(headers, COL_PATTERNS.unit);
+  mapping.quantity = findColumn(headers, COL_PATTERNS.quantity);
+  mapping.unitPrice = findColumn(headers, COL_PATTERNS.unitPrice);
+  mapping.discipline = findColumn(headers, COL_PATTERNS.discipline);
+  mapping.zone = findColumn(headers, COL_PATTERNS.zone);
+
+  state.columnMappings[version - 1] = { headers, mapping };
+  return { data, headers, mapping };
+}
+
+function showMappingUI() {
+  state.importLog = [];
+  const p1 = parseSheet(1);
+  const p2 = parseSheet(2);
+
+  if (!p1 || !p2) {
+    alert('Hata: Excel sayfaları boş');
+    return;
+  }
+
+  const fields = [
+    { key: 'itemName', label: 'İmalat Adı', required: true },
+    { key: 'unit', label: 'Birim', required: true },
+    { key: 'quantity', label: 'Miktar', required: true },
+    { key: 'positionCode', label: 'Poz No', required: false },
+    { key: 'unitPrice', label: 'Birim Fiyat', required: false },
+    { key: 'discipline', label: 'Disiplin', required: false },
+    { key: 'zone', label: 'Mahal/Yer', required: false },
+  ];
+
+  let html = '<tr><th>Alan</th><th>V1 Sütun</th><th>V2 Sütun</th><th>Durum</th></tr>';
+
+  fields.forEach(field => {
+    const v1Idx = p1.mapping[field.key];
+    const v2Idx = p2.mapping[field.key];
+    const v1Col = v1Idx >= 0 ? p1.headers[v1Idx] : '-';
+    const v2Col = v2Idx >= 0 ? p2.headers[v2Idx] : '-';
+    const v1Ok = v1Idx >= 0;
+    const v2Ok = v2Idx >= 0;
+    const status = v1Ok && v2Ok ? 'ok' : (field.required ? 'error' : 'warning');
+    const statusText = v1Ok && v2Ok ? '✓ Eşleşti' : (field.required ? '✗ Gerekli' : '⚠ Opsiyonel');
+
+    html += `<tr>
+      <td>${field.label}</td>
+      <td><select data-version="1" data-field="${field.key}"><option>-</option>${p1.headers.map((h, i) => `<option value="${i}" ${v1Idx === i ? 'selected' : ''}>${h}</option>`).join('')}</select></td>
+      <td><select data-version="2" data-field="${field.key}"><option>-</option>${p2.headers.map((h, i) => `<option value="${i}" ${v2Idx === i ? 'selected' : ''}>${h}</option>`).join('')}</select></td>
+      <td><span class="status-badge status-${status}">${statusText}</span></td>
+    </tr>`;
+  });
+
+  document.getElementById('mappingTable').innerHTML = html;
+
+  document.querySelectorAll('#mappingTable select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const version = parseInt(sel.dataset.version);
+      const field = sel.dataset.field;
+      const idx = parseInt(sel.value);
+      if (idx >= 0) {
+        state.columnMappings[version - 1].mapping[field] = idx;
+      }
+    });
+  });
+
+  const warnings = [];
+  const d1 = detectDuplicateRows(itemsFromParsed(p1, state.columnMappings[0].mapping));
+  const d2 = detectDuplicateRows(itemsFromParsed(p2, state.columnMappings[1].mapping));
+  if (d1.length > 0) warnings.push(`V1'de ${d1.length} şüpheli kopya satır bulundu`);
+  if (d2.length > 0) warnings.push(`V2'de ${d2.length} şüpheli kopya satır bulundu`);
+
+  let whtml = '';
+  if (warnings.length > 0) {
+    whtml = '<div class="warnings-box"><strong>Uyarılar:</strong>';
+    warnings.forEach(w => whtml += `<div class="warning-item">${w}</div>`);
+    whtml += '</div>';
+  }
+  document.getElementById('warningsBox').innerHTML = whtml;
+
+  let logHtml = '';
+  if (state.importLog.length > 0) {
+    logHtml = `<div class="import-log">
+      <div class="log-header" onclick="document.querySelector('.log-body').classList.toggle('visible')">⚠️ İçe Aktarma Notları (${state.importLog.length}) ▾</div>
+      <div class="log-body">
+        <table>`;
+    state.importLog.forEach(log => {
+      const rowClass = `log-${log.type}`;
+      logHtml += `<tr class="${rowClass}"><td>Satır ${log.row}</td><td>${log.reason}</td></tr>`;
+    });
+    logHtml += `</table></div></div>`;
+  }
+  document.getElementById('importLogSection').innerHTML = logHtml;
+
+  showPreview(p1, 1);
+  showPreview(p2, 2);
+
+  document.getElementById('btnContinueStep2').disabled = false;
+}
+
+function showPreview(parsed, version) {
+  const { data, headers, mapping } = parsed;
+  const items = itemsFromParsed(parsed, mapping);
+  const previewData = data.slice(0, 5);
+
+  let html = '<tr>';
+  if (mapping.positionCode >= 0) html += `<th>${headers[mapping.positionCode]}</th>`;
+  if (mapping.itemName >= 0) html += `<th>${headers[mapping.itemName]}</th>`;
+  if (mapping.quantity >= 0) html += `<th>${headers[mapping.quantity]}</th>`;
+  if (mapping.unit >= 0) html += `<th>${headers[mapping.unit]}</th>`;
+  html += '</tr>';
+
+  previewData.forEach(row => {
+    html += '<tr>';
+    if (mapping.positionCode >= 0) html += `<td>${row[headers[mapping.positionCode]] || ''}</td>`;
+    if (mapping.itemName >= 0) html += `<td>${row[headers[mapping.itemName]] || ''}</td>`;
+    if (mapping.quantity >= 0) html += `<td>${row[headers[mapping.quantity]] || ''}</td>`;
+    if (mapping.unit >= 0) html += `<td>${row[headers[mapping.unit]] || ''}</td>`;
+    html += '</tr>';
+  });
+
+  document.getElementById('previewV' + version).innerHTML = html;
+}
+
+function itemsFromParsed(parsed, mapping) {
+  const { data, headers } = parsed;
+  return data.map((row, idx) => ({
+    positionCode: mapping.positionCode >= 0 ? String(row[headers[mapping.positionCode]] || '').trim() : '',
+    itemName: mapping.itemName >= 0 ? String(row[headers[mapping.itemName]] || '').trim() : '',
+    unit: mapping.unit >= 0 ? normalizeUnit(row[headers[mapping.unit]] || '') : '',
+    quantity: mapping.quantity >= 0 ? parseNumber(row[headers[mapping.quantity]] || 0) : 0,
+    unitPrice: mapping.unitPrice >= 0 ? parseNumber(row[headers[mapping.unitPrice]] || 0) : 0,
+    discipline: mapping.discipline >= 0 ? String(row[headers[mapping.discipline]] || '').trim() : '',
+    zone: mapping.zone >= 0 ? String(row[headers[mapping.zone]] || '').trim() : '',
+    rowIndex: idx + 2,
+  }));
+}
+
+function matchItems(baseItems, compItems, threshold = 0.72) {
+  const matches = [];
+  const usedComp = new Set();
+
+  for (const base of baseItems) {
+    for (let i = 0; i < compItems.length; i++) {
+      if (usedComp.has(i)) continue;
+      const comp = compItems[i];
+      if (base.positionCode && base.positionCode === comp.positionCode && normalizeItemName(base.itemName) === normalizeItemName(comp.itemName)) {
+        matches.push({ base, comp, confidence: 1 });
+        usedComp.add(i);
+        break;
+      }
+    }
+  }
+
+  for (const base of baseItems) {
+    if (matches.some(m => m.base === base)) continue;
+    if (!base.positionCode) continue;
+    for (let i = 0; i < compItems.length; i++) {
+      if (usedComp.has(i)) continue;
+      const comp = compItems[i];
+      if (base.positionCode === comp.positionCode) {
+        const sim = calculateSimilarity(base.itemName, comp.itemName);
+        if (sim >= threshold) {
+          matches.push({ base, comp, confidence: sim });
+          usedComp.add(i);
+          break;
+        }
+      }
+    }
+  }
+
+  for (const base of baseItems) {
+    if (matches.some(m => m.base === base)) continue;
+    if (base.positionCode) continue;
+    for (let i = 0; i < compItems.length; i++) {
+      if (usedComp.has(i)) continue;
+      const comp = compItems[i];
+      if (!comp.positionCode) {
+        const sim = calculateSimilarity(base.itemName, comp.itemName);
+        if (sim >= threshold) {
+          matches.push({ base, comp, confidence: sim });
+          usedComp.add(i);
+          break;
+        }
+      }
+    }
+  }
+
+  for (const base of baseItems) {
+    if (matches.some(m => m.base === base)) continue;
+    let bestMatch = null;
+    let bestSim = 0;
+    for (let i = 0; i < compItems.length; i++) {
+      if (usedComp.has(i)) continue;
+      const comp = compItems[i];
+      const sim = calculateSimilarity(base.itemName, comp.itemName);
+      if (sim > bestSim) {
+        bestSim = sim;
+        bestMatch = i;
+      }
+    }
+    if (bestSim >= threshold && bestMatch !== null) {
+      matches.push({ base, comp: compItems[bestMatch], confidence: bestSim });
+      usedComp.add(bestMatch);
+    }
+  }
+
+  for (const base of baseItems) {
+    if (!matches.some(m => m.base === base)) {
+      matches.push({ base, comp: null, confidence: 0 });
+    }
+  }
+
+  for (let i = 0; i < compItems.length; i++) {
+    if (!usedComp.has(i)) {
+      matches.push({ base: null, comp: compItems[i], confidence: 0 });
+    }
+  }
+
+  return matches;
+}
+
+function getExplanation(diff) {
+  switch (diff.cat) {
+    case 'added':
+      return `Bu kalem V1'de bulunmuyor. V2'de yeni eklenmiş. Birim: ${diff.v2Unit}, Miktar: ${diff.v2Qty}`;
+    case 'removed':
+      return `Bu kalem V2'de bulunmuyor. Revizyon sırasında çıkarılmış. Eski Birim: ${diff.v1Unit}, Eski Miktar: ${diff.v1Qty}`;
+    case 'increased':
+      const upPercent = ((diff.v2Qty - diff.v1Qty) / diff.v1Qty * 100).toFixed(1);
+      return `Miktar ${diff.v1Qty} → ${diff.v2Qty} (↑${upPercent}%). Birim Fiyat: ${diff.v1Item?.unitPrice || 0}₺`;
+    case 'decreased':
+      const downPercent = ((diff.v2Qty - diff.v1Qty) / diff.v1Qty * 100).toFixed(1);
+      return `Miktar ${diff.v1Qty} → ${diff.v2Qty} (↓${Math.abs(downPercent)}%). Birim Fiyat: ${diff.v1Item?.unitPrice || 0}₺`;
+    case 'name_changed':
+      return `Kalem adı değişti: '${diff.v1Item?.itemName}' → '${diff.v2Item?.itemName}'. Miktar: ${diff.v1Qty} ${diff.v1Unit}`;
+    case 'unit_changed':
+      return `Birim değişti: ${diff.v1Unit} → ${diff.v2Unit}. Miktarlar karşılaştırılamaz. Manuel inceleme gerekli.`;
+    case 'unchanged':
+      return `Kalem her iki revizyonda da aynı: ${diff.v1Qty} ${diff.v1Unit}, ${diff.v1Item?.unitPrice || 0}₺/birim`;
+    default:
+      return '';
+  }
+}
+
+function generateDiffs(matches) {
+  const diffs = [];
+
+  for (const match of matches) {
+    const base = match.base;
+    const comp = match.comp;
+
+    if (base && comp) {
+      if (normalizeUnit(base.unit) !== normalizeUnit(comp.unit)) {
+        diffs.push({
+          positionCode: base.positionCode || comp.positionCode || '',
+          itemName: base.itemName || comp.itemName || '',
+          cat: 'unit_changed',
+          severity: 'medium',
+          v1Qty: base.quantity,
+          v2Qty: comp.quantity,
+          v1Unit: base.unit,
+          v2Unit: comp.unit,
+          deltaQty: 0,
+          deltaPercent: 0,
+          amountDelta: 0,
+          v1Item: base,
+          v2Item: comp,
+        });
+      } else if (base.quantity === comp.quantity) {
+        const nameChanged = normalizeItemName(base.itemName) !== normalizeItemName(comp.itemName);
+        diffs.push({
+          positionCode: base.positionCode || '',
+          itemName: nameChanged ? base.itemName : (base.itemName || ''),
+          cat: nameChanged ? 'name_changed' : 'unchanged',
+          severity: 'low',
+          v1Qty: base.quantity,
+          v2Qty: comp.quantity,
+          v1Unit: base.unit,
+          v2Unit: comp.unit,
+          deltaQty: 0,
+          deltaPercent: 0,
+          amountDelta: 0,
+          v1Item: base,
+          v2Item: comp,
+        });
+      } else if (comp.quantity > base.quantity) {
+        const delta = comp.quantity - base.quantity;
+        const percent = base.quantity > 0 ? (delta / base.quantity) * 100 : 0;
+        diffs.push({
+          positionCode: base.positionCode || '',
+          itemName: base.itemName || '',
+          cat: 'increased',
+          severity: calculateSeverity(delta, percent, base.quantity),
+          v1Qty: base.quantity,
+          v2Qty: comp.quantity,
+          v1Unit: base.unit,
+          v2Unit: comp.unit,
+          deltaQty: delta,
+          deltaPercent: percent,
+          amountDelta: delta * (base.unitPrice || 0),
+          v1Item: base,
+          v2Item: comp,
+        });
+      } else {
+        const delta = comp.quantity - base.quantity;
+        const percent = base.quantity > 0 ? (delta / base.quantity) * 100 : 0;
+        diffs.push({
+          positionCode: base.positionCode || '',
+          itemName: base.itemName || '',
+          cat: 'decreased',
+          severity: calculateSeverity(delta, percent, base.quantity),
+          v1Qty: base.quantity,
+          v2Qty: comp.quantity,
+          v1Unit: base.unit,
+          v2Unit: comp.unit,
+          deltaQty: delta,
+          deltaPercent: percent,
+          amountDelta: delta * (base.unitPrice || 0),
+          v1Item: base,
+          v2Item: comp,
+        });
+      }
+    } else if (base) {
+      diffs.push({
+        positionCode: base.positionCode || '',
+        itemName: base.itemName || '',
+        cat: 'removed',
+        severity: 'high',
+        v1Qty: base.quantity,
+        v2Qty: 0,
+        v1Unit: base.unit,
+        v2Unit: '',
+        deltaQty: -base.quantity,
+        deltaPercent: -100,
+        amountDelta: -(base.quantity * (base.unitPrice || 0)),
+        v1Item: base,
+        v2Item: null,
+      });
+    } else {
+      diffs.push({
+        positionCode: comp.positionCode || '',
+        itemName: comp.itemName || '',
+        cat: 'added',
+        severity: 'high',
+        v1Qty: 0,
+        v2Qty: comp.quantity,
+        v1Unit: '',
+        v2Unit: comp.unit,
+        deltaQty: comp.quantity,
+        deltaPercent: 100,
+        amountDelta: comp.quantity * (comp.unitPrice || 0),
+        v1Item: null,
+        v2Item: comp,
+      });
+    }
+  }
+
+  return diffs;
+}
+
+function calculateSeverity(deltaQty, deltaPercent, baseQty) {
+  if (Math.abs(deltaPercent) > 50) return 'critical';
+  if (Math.abs(deltaPercent) > 20) return 'high';
+  if (Math.abs(deltaQty) > 10) return 'medium';
+  return 'low';
+}
+
+function showResults() {
+  const t0 = Date.now();
+
+  let items1, items2;
+  if (state.isDemo) {
+    items1 = state.parsedItems[0];
+    items2 = state.parsedItems[1];
+  } else {
+    const p1 = parseSheet(1);
+    const p2 = parseSheet(2);
+    if (!p1 || !p2) {
+      alert('Dosya verileri okunamadı. Lütfen dosyaları tekrar yükleyin.');
+      return;
+    }
+    items1 = itemsFromParsed(p1, state.columnMappings[0]?.mapping);
+    items2 = itemsFromParsed(p2, state.columnMappings[1]?.mapping);
+  }
+
+  state.parsedItems[0] = items1;
+  state.parsedItems[1] = items2;
+
+  const tMatch0 = Date.now();
+  const threshold = 0.72;
+  const matches = matchItems(items1, items2, threshold);
+  const tMatch1 = Date.now();
+
+  const tDiff0 = Date.now();
+  state.allDiffs = generateDiffs(matches);
+  const tDiff1 = Date.now();
+
+  state.diffs = [...state.allDiffs];
+
+  const totalAmount = state.diffs.reduce((s, d) => s + (d.amountDelta || 0), 0);
+  const matchedCount = state.diffs.filter(d => d.v1Item && d.v2Item).length;
+  const matchRate = items1.length > 0 ? ((matchedCount / items1.length) * 100).toFixed(1) : 0;
+  const manualReviewCount = state.diffs.filter(d => ['added', 'removed', 'unit_changed', 'duplicate_suspect'].includes(d.cat)).length;
+
+  const categoryCounts = {};
+  const severityCounts = { critical: 0, high: 0, medium: 0, low: 0 };
+  const disciplines = new Set();
+
+  state.diffs.forEach(d => {
+    categoryCounts[d.cat] = (categoryCounts[d.cat] || 0) + 1;
+    severityCounts[d.severity] = (severityCounts[d.severity] || 0) + 1;
+    if (d.v1Item?.discipline) disciplines.add(d.v1Item.discipline);
+    if (d.v2Item?.discipline) disciplines.add(d.v2Item.discipline);
+  });
+
+  state.summary = {
+    totalDiffs: state.diffs.length,
+    totalAmount,
+    matchRate,
+    matchedCount,
+    manualReviewCount,
+    categoryCounts,
+    severityCounts,
+    disciplines: Array.from(disciplines),
+  };
+
+  metrics.track('comparison_run', {
+    v1Items: items1.length,
+    v2Items: items2.length,
+    matchDuration: tMatch1 - tMatch0,
+    diffDuration: tDiff1 - tDiff0,
+    totalTime: Date.now() - t0
+  });
+
+  metrics.perfTiming = {
+    parse1: tMatch0 - t0,
+    match: tMatch1 - tMatch0,
+    diff: tDiff1 - tDiff0,
+    total: Date.now() - t0
+  };
+
+  renderResults();
+}
+
+function renderResults() {
+  const s = state.summary;
+
+  let kpiHtml = `
+    <div class="kpi-row kpi-main">
+      <div class="kpi-card kpi-large">
+        <div class="kpi-value">${s.totalDiffs}</div>
+        <div class="kpi-label">Toplam Kalem</div>
+        <div class="kpi-sub">V1: ${state.parsedItems[0]?.length || 0} | V2: ${state.parsedItems[1]?.length || 0}</div>
+      </div>
+      <div class="kpi-card kpi-large">
+        <div class="kpi-value ${s.totalAmount > 0 ? 'kpi-positive' : 'kpi-negative'}">${s.totalAmount > 0 ? '+' : ''}${s.totalAmount.toFixed(0)} ₺</div>
+        <div class="kpi-label">Mali Etki</div>
+        <div class="kpi-sub">Artış ve azalış</div>
+      </div>
+      <div class="kpi-card kpi-large">
+        <div class="kpi-value">${s.matchRate}%</div>
+        <div class="kpi-label">Eşleşme Oranı</div>
+        <div class="kpi-sub">${s.matchedCount} / ${state.parsedItems[0]?.length || 0} kalem</div>
+      </div>
+      <div class="kpi-card kpi-large kpi-attention">
+        <div class="kpi-value">${s.manualReviewCount}</div>
+        <div class="kpi-label">Manuel İnceleme</div>
+        <div class="kpi-sub">Dikkat gerekli</div>
+      </div>
+    </div>
+    <div class="kpi-row kpi-categories">
+  `;
+
+  Object.keys(CATEGORIES).forEach(cat => {
+    const count = s.categoryCounts[cat] || 0;
+    kpiHtml += `<div class="kpi-card"><div class="kpi-value">${count}</div><div class="kpi-label">${CATEGORIES[cat].label}</div></div>`;
+  });
+
+  kpiHtml += '</div>';
+  document.getElementById('kpiPanel').innerHTML = kpiHtml;
+
+  let perfHtml = `<div class="perf-panel">
+    <div class="perf-header" onclick="document.querySelector('.perf-body').classList.toggle('visible')">⚙️ Performans ▾</div>
+    <div class="perf-body">
+Dosya okuma:    ${(metrics.perfTiming?.parse1 || 0).toFixed(0)}ms<br>
+Eşleştirme:     ${(metrics.perfTiming?.match || 0).toFixed(0)}ms<br>
+Fark üretimi:   ${(metrics.perfTiming?.diff || 0).toFixed(0)}ms<br>
+Toplam:         ${(metrics.perfTiming?.total || 0).toFixed(0)}ms
+    </div>
+  </div>`;
+  document.getElementById('perfPanelSection').innerHTML = perfHtml;
+
+  let discHtml = '<option value="">Tüm Disiplinler</option>';
+  s.disciplines.forEach(d => {
+    discHtml += `<option value="${d}">${d}</option>`;
+  });
+  document.getElementById('filterDiscipline').innerHTML = discHtml;
+
+  applyFilters();
+}
+
+function applyFilters() {
+  const catFilter = document.getElementById('filterCategory').value;
+  const sevFilter = document.getElementById('filterSeverity').value;
+  const discFilter = document.getElementById('filterDiscipline').value;
+  const searchVal = document.getElementById('filterSearch').value.toLowerCase();
+  const sortBy = document.getElementById('filterSort').value;
+
+  let filtered = state.allDiffs.filter(d => {
+    if (catFilter && d.cat !== catFilter) return false;
+    if (sevFilter && d.severity !== sevFilter) return false;
+    if (discFilter && d.v1Item?.discipline !== discFilter && d.v2Item?.discipline !== discFilter) return false;
+    if (searchVal && !d.itemName.toLowerCase().includes(searchVal) && !d.positionCode.toLowerCase().includes(searchVal)) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    if (sortBy === 'severity') {
+      const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return sevOrder[a.severity] - sevOrder[b.severity];
+    } else if (sortBy === 'amount') {
+      return Math.abs(b.amountDelta || 0) - Math.abs(a.amountDelta || 0);
+    } else if (sortBy === 'delta') {
+      return Math.abs(b.deltaPercent) - Math.abs(a.deltaPercent);
+    } else {
+      return a.itemName.localeCompare(b.itemName);
+    }
+  });
+
+  state.diffs = filtered;
+  renderTable();
+  document.getElementById('filterCount').textContent = `${filtered.length} / ${state.allDiffs.length} fark`;
+}
+
+function renderTable() {
+  let html = '';
+  state.diffs.forEach((d, i) => {
+    const deltaCls = d.deltaQty > 0 ? 'delta-pos' : (d.deltaQty < 0 ? 'delta-neg' : 'delta-neutral');
+    const amountCls = (d.amountDelta || 0) > 0 ? 'delta-pos' : ((d.amountDelta || 0) < 0 ? 'delta-neg' : 'delta-neutral');
+
+
+    html += `<tr onclick="toggleDetail(${i})">
+      <td class="poz">${d.positionCode}</td>
+      <td class="item-name">${d.itemName}</td>
+      <td><span class="badge badge-${d.cat}">${CATEGORIES[d.cat].label}</span></td>
+      <td><span class="badge badge-${d.severity}">${d.severity.charAt(0).toUpperCase() + d.severity.slice(1)}</span></td>
+      <td>${d.v1Qty.toFixed(2)} ${d.v1Unit}</td>
+      <td>${d.v2Qty.toFixed(2)} ${d.v2Unit}</td>
+      <td class="${deltaCls}">${d.deltaQty > 0 ? '+' : ''}${d.deltaQty.toFixed(2)} (${d.deltaPercent.toFixed(0)}%)</td>
+      <td class="${amountCls}">${(d.amountDelta || 0) > 0 ? '+' : ''}${(d.amountDelta || 0).toFixed(2)}</td>
+    </tr>`;
+
+    if (state.expandedRow === i) {
+      const v1Disc = d.v1Item?.discipline || '-';
+      const v2Disc = d.v2Item?.discipline || '-';
+      const v1Zone = d.v1Item?.zone || '-';
+      const v2Zone = d.v2Item?.zone || '-';
+      html += `<tr class="detail-row">
+        <td colspan="8">
+          <div class="detail-grid">
+            <div>
+              <div class="dlabel">V1 Disiplin</div>
+              <div class="dval">${v1Disc}</div>
+            </div>
+            <div>
+              <div class="dlabel">V2 Disiplin</div>
+              <div class="dval">${v2Disc}</div>
+            </div>
+            <div>
+              <div class="dlabel">Eşleştirme Güvenliği</div>
+              <div class="dval">${(d.v1Item && d.v2Item ? '98%' : (d.v1Item || d.v2Item ? 'Eşleşmemiş' : '-'))}</div>
+            </div>
+            <div>
+              <div class="dlabel">V1 Mahal</div>
+              <div class="dval">${v1Zone}</div>
+            </div>
+            <div>
+              <div class="dlabel">V2 Mahal</div>
+              <div class="dval">${v2Zone}</div>
+            </div>
+            <div></div>
+            <div class="detail-explanation">
+              ${getExplanation(d)}
+            </div>
+            <div class="feedback-actions">
+              <button class="fb-btn fb-correct" onclick="submitItemFeedback(${i}, 'correct')">✅ Doğru</button>
+              <button class="fb-btn fb-wrong" onclick="submitItemFeedback(${i}, 'wrong')">❌ Yanlış</button>
+              <button class="fb-btn fb-note" onclick="submitItemFeedback(${i}, 'note')">💬 Not</button>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    }
+  });
+  document.getElementById('diffBody').innerHTML = html;
+}
+
+function toggleDetail(idx) {
+  state.expandedRow = state.expandedRow === idx ? null : idx;
+  renderTable();
+}
+
+function submitItemFeedback(idx, type) {
+  const d = state.diffs[idx];
+  const note = type === 'note' ? prompt('Not ekleyin:') : '';
+  state.feedback.push({ item: d.itemName, type, note, timestamp: new Date() });
+  showToast(type === 'correct' ? '✅ Geri bildirim kaydedildi' : (type === 'wrong' ? '❌ Hata kaydedildi' : '💬 Not kaydedildi'));
+  metrics.track('feedback_submit', { type, item: d.itemName });
+}
+
+function clearFilters() {
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterSeverity').value = '';
+  document.getElementById('filterDiscipline').value = '';
+  document.getElementById('filterSort').value = 'severity';
+  document.getElementById('filterSearch').value = '';
+  applyFilters();
+}
+
+function exportExcel() {
+  metrics.track('export_excel');
+  const wb = XLSX.utils.book_new();
+
+  const summaryData = [
+    ['MetrajOS - Karşılaştırma Özeti'],
+    [],
+    ['Metrik', 'Değer'],
+    ['Toplam Fark Sayısı', state.summary.totalDiffs],
+    ['Mali Etki (₺)', state.summary.totalAmount],
+    ['Eşleşme Oranı (%)', state.summary.matchRate],
+    ['V1 Toplam Kalem', state.parsedItems[0].length],
+    ['V2 Toplam Kalem', state.parsedItems[1].length],
+    ['Manuel İnceleme Gerekli', state.summary.manualReviewCount],
+    [],
+    ['Kategori Dağılımı'],
+    ['Kategori', 'Sayı'],
+  ];
+
+  Object.keys(CATEGORIES).forEach(cat => {
+    summaryData.push([CATEGORIES[cat].label, state.summary.categoryCounts[cat] || 0]);
+  });
+
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Özet');
+
+  const detailData = [
+    ['Poz No', 'İmalat Adı', 'Kategori', 'Şiddet', 'V1 Miktar', 'V1 Birim', 'V2 Miktar', 'V2 Birim', 'Fark Miktarı', 'Fark %', 'Mali Fark (₺)', 'Açıklama'],
+  ];
+
+  state.allDiffs.forEach(d => {
+    detailData.push([
+      d.positionCode,
+      d.itemName,
+      CATEGORIES[d.cat].label,
+      d.severity,
+      d.v1Qty,
+      d.v1Unit,
+      d.v2Qty,
+      d.v2Unit,
+      d.deltaQty,
+      d.deltaPercent.toFixed(2),
+      (d.amountDelta || 0).toFixed(2),
+      getExplanation(d),
+    ]);
+  });
+
+  const ws2 = XLSX.utils.aoa_to_sheet(detailData);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Fark Detayları');
+
+  XLSX.writeFile(wb, 'MetrajOS_Karşılaştırma.xlsx');
+}
+
+function exportFeedback() {
+  metrics.track('export_feedback');
+  const data = {
+    sessionId: metrics.sessionId,
+    timestamp: new Date(),
+    feedback: state.feedback,
+    summary: state.summary,
+    totalEvents: metrics.events.length
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'MetrajOS_Geri_Bildirim.json';
+  a.click();
+}
+
+function openFeedbackModal() {
+  document.getElementById('feedbackModal').classList.add('visible');
+}
+
+function closeFeedbackModal() {
+  document.getElementById('feedbackModal').classList.remove('visible');
+}
+
+function submitFeedback() {
+  const type = document.getElementById('feedbackType').value;
+  const text = document.getElementById('feedbackText').value;
+
+  if (!type || !text) {
+    alert('Lütfen tür ve metin girin');
+    return;
+  }
+
+  state.feedback.push({ type, text, timestamp: new Date() });
+  metrics.track('feedback_submit', { type });
+
+  document.getElementById('feedbackType').value = '';
+  document.getElementById('feedbackText').value = '';
+  closeFeedbackModal();
+  showToast('Geri bildiriminiz kaydedildi');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function goToStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const sec = document.getElementById('section' + i);
+    const step = document.getElementById('step' + i + 'Indicator');
+    if (sec) sec.classList.remove('active');
+    if (step) step.classList.remove('active', 'completed');
+  }
+
+  const activeSection = document.getElementById('section' + n);
+  const activeStep = document.getElementById('step' + n + 'Indicator');
+  if (activeSection) activeSection.classList.add('active');
+  if (activeStep) activeStep.classList.add('active');
+
+  for (let i = 1; i < n; i++) {
+    const prevStep = document.getElementById('step' + i + 'Indicator');
+    if (prevStep) prevStep.classList.add('completed');
+  }
+
+  if (n === 2) {
+    showMappingUI();
+  } else if (n === 3) {
+    showResults();
+  }
+}
+
+function runTests() {
+  const results = [];
+
+  function assert(condition, message) {
+    if (condition) {
+      results.push(`<span class="test-pass">✓ ${message}</span>`);
+    } else {
+      results.push(`<span class="test-fail">✗ ${message}</span>`);
+    }
+  }
+
+  assert(normalizeUnit('m2') === 'm²', 'Unit: m2 → m²');
+  assert(normalizeUnit('M²') === 'm²', 'Unit: M² → m²');
+  assert(normalizeUnit('metrekare') === 'm²', 'Unit: metrekare → m²');
+  assert(parseNumber('1.250,50') === 1250.50, 'Number: Turkish 1.250,50 → 1250.50');
+  assert(parseNumber('1250.50') === 1250.50, 'Number: 1250.50 → 1250.50');
+  assert(isNaN(parseNumber('')), 'Number: empty → NaN');
+
+  const testHeaders = ['proje_kodu', 'poz_no', 'imalat_adi', 'birim', 'miktar', 'birim_fiyat_tl'];
+  assert(findColumn(testHeaders, COL_PATTERNS.positionCode) === 1, 'Column: poz_no at index 1');
+  assert(findColumn(testHeaders, COL_PATTERNS.itemName) === 2, 'Column: imalat_adi at index 2');
+
+  assert(calculateSimilarity('Gazbeton Duvar 19 cm', '19 cm Gazbeton Duvar') > 0.7, 'Similarity: word reorder > 0.7');
+  assert(calculateSimilarity('C30 Beton', 'Lineer LED') < 0.3, 'Similarity: different < 0.3');
+
+  const baseItems = [
+    { positionCode: '15.150.100', itemName: 'C30 Beton', unit: 'm3', quantity: 100, zone: 'Temel', discipline: '', unitPrice: 2900, rowIndex: 2 },
+  ];
+  const compItems = [
+    { positionCode: '15.150.100', itemName: 'C30 Beton', unit: 'm3', quantity: 120, zone: 'Temel', discipline: '', unitPrice: 2900, rowIndex: 2 },
+  ];
+  const matches = matchItems(baseItems, compItems, 0.72);
+  const diffs = generateDiffs(matches);
+  assert(diffs.some(d => d.cat === 'increased'), 'Diff: has increased');
+
+  assert(DEMO_SCENARIOS.revision.v1.length === 12, 'Demo: Revision scenario has 12 V1 items');
+  assert(DEMO_SCENARIOS.addremove.v2.length === 12, 'Demo: Addremove scenario has 12 V2 items');
+  assert(DEMO_SCENARIOS.unitname.v1.length === 8, 'Demo: Unitname scenario has 8 V1 items');
+
+  return results;
+}
+
+function openTestModal() {
+  const results = runTests();
+  const html = results.join('<br>');
+  document.getElementById('testResults').innerHTML = html;
+  document.getElementById('testModal').classList.add('visible');
+}
+
+function closeTestModal() {
+  document.getElementById('testModal').classList.remove('visible');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 't') {
+    e.preventDefault();
+    openTestModal();
+  }
+  if (e.ctrlKey && e.key === 'e') {
+    e.preventDefault();
+    exportExcel();
+  }
+  if (e.ctrlKey && e.key === 'd') {
+    e.preventDefault();
+    openFeedbackModal();
+  }
+});
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'feedbackModal') {
+    closeFeedbackModal();
+  }
+  if (e.target.id === 'testModal') {
+    closeTestModal();
+  }
+});
+</script>
+
+</body>
+</html>

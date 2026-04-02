@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MetrajOS — Enhanced MVP</title>
+
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="logo" onclick="window.location.reload()" style="cursor: pointer;" title="Başlangıç sayfasına dön">
+      <div class="logo-icon">M</div>
+      <div class="logo-text">Metraj<span>OS</span></div>
+    </div>
+    <div style="display: flex; align-items: center;">
+      <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Gece/Gündüz Modu">🌙</button>
+      <div class="nav-badge">Enhanced MVP v2.0</div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div id="sessionLoaderContainer"></div>
+
+  <div class="step-indicator">
+    <div class="step active" id="step1Indicator">
+      <div class="step-number">1</div>
+      <div class="step-label">Dosya Yükle</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2Indicator">
+      <div class="step-number">2</div>
+      <div class="step-label">Sütun Eşleştir</div>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3Indicator">
+      <div class="step-number">3</div>
+      <div class="step-label">Sonuçlar</div>
+    </div>
+  </div>
+
+  <div class="section active" id="section1">
+    <div class="demo-banner">
+      <div class="demo-title">🎯 Hemen Deneyin</div>
+      <div class="demo-subtitle">Hazır senaryolardan birini seçerek ürünü keşfedin</div>
+      <div class="demo-cards">
+        <div class="demo-card" onclick="loadDemo('revision')">
+          <div class="demo-icon">📋</div>
+          <div class="demo-name">Revizyon Farkı</div>
+          <div class="demo-desc">12 kalem, miktar ve isim değişiklikleri</div>
+        </div>
+        <div class="demo-card" onclick="loadDemo('addremove')">
+          <div class="demo-icon">➕➖</div>
+          <div class="demo-name">Ekleme / Çıkarma</div>
+          <div class="demo-desc">Yoğun ekleme/silme senaryosu</div>
+        </div>
+        <div class="demo-card" onclick="loadDemo('unitname')">
+          <div class="demo-icon">⚠️</div>
+          <div class="demo-name">Birim & İsim Karmaşası</div>
+          <div class="demo-desc">Birim dönüşümleri ve isim farklılıkları</div>
+        </div>
+      </div>
+      <div class="demo-divider"><span>veya kendi dosyanızı yükleyin</span></div>
+    </div>
+
+    <div class="upload-section">
+      <div class="upload-box" id="dropV1" onclick="document.getElementById('fileV1').click()">
+        <input type="file" id="fileV1" accept=".xlsx,.xls" onchange="handleFile(1, this)">
+        <div class="upload-icon v1-icon">V1</div>
+        <h3>Temel Metraj (V1)</h3>
+        <p>İlk versiyon Excel dosyasını yükleyin</p>
+        <div class="file-info" id="infoV1" style="display: none;"></div>
+        <div class="sheet-select" id="sheetSelV1" style="display: none;">
+          <select id="sheetsV1" onchange="selectSheet(1)"></select>
+        </div>
+      </div>
+      <div class="upload-box" id="dropV2" onclick="document.getElementById('fileV2').click()">
+        <input type="file" id="fileV2" accept=".xlsx,.xls" onchange="handleFile(2, this)">
+        <div class="upload-icon v2-icon">V2</div>
+        <h3>Revize Metraj (V2)</h3>
+        <p>Karşılaştırılacak Excel dosyasını yükleyin</p>
+        <div class="file-info" id="infoV2" style="display: none;"></div>
+        <div class="sheet-select" id="sheetSelV2" style="display: none;">
+          <select id="sheetsV2" onchange="selectSheet(2)"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" id="btnContinueStep1" disabled onclick="goToStep(2)">
+        Devam Et
+      </button>
+    </div>
+  </div>
+
+  <div class="section" id="section2">
+    <div class="mapping-section">
+      <div class="mapping-title">Sütun Eşleştirmesi</div>
+      <div id="importLogSection"></div>
+      <div id="warningsBox"></div>
+      <table class="mapping-table" id="mappingTable"></table>
+      <div class="preview-section">
+        <div class="preview-title">V1 İlk 5 Satır (Önizleme)</div>
+        <div style="overflow-x: auto;">
+          <table class="preview-table" id="previewV1"></table>
+        </div>
+        <div class="preview-title" style="margin-top: 16px;">V2 İlk 5 Satır (Önizleme)</div>
+        <div style="overflow-x: auto;">
+          <table class="preview-table" id="previewV2"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-outline" onclick="goToStep(1)">Geri Dön</button>
+      <button class="btn btn-primary" id="btnContinueStep2" disabled onclick="goToStep(3)">
+        Karşılaştır
+      </button>
+    </div>
+  </div>
+
+  <div class="section" id="section3">
+    <div class="kpi-panel" id="kpiPanel"></div>
+    <div class="charts-row" id="chartsRow" style="display: none;">
+      <div class="chart-container">
+        <canvas id="costChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <canvas id="typeChart"></canvas>
+      </div>
+    </div>
+    <div id="perfPanelSection"></div>
+
+    <div class="filter-bar">
+      <select id="filterCategory" onchange="applyFilters()">
+        <option value="">Tüm Kategoriler</option>
+        <option value="added">Eklenen</option>
+        <option value="removed">Kaldırılan</option>
+        <option value="increased">Artan</option>
+        <option value="decreased">Azalan</option>
+        <option value="unchanged">Değişmeyen</option>
+        <option value="name_changed">İsim Değişti</option>
+        <option value="unit_changed">Birim Değişti</option>
+        <option value="duplicate_suspect">Şüpheli Kopya</option>
+      </select>
+      <select id="filterSeverity" onchange="applyFilters()">
+        <option value="">Tüm Şiddetler</option>
+        <option value="critical">Kritik</option>
+        <option value="high">Yüksek</option>
+        <option value="medium">Orta</option>
+        <option value="low">Düşük</option>
+      </select>
+      <select id="filterDiscipline" onchange="applyFilters()">
+        <option value="">Tüm Disiplinler</option>
+      </select>
+      <select id="filterSort" onchange="applyFilters()">
+        <option value="severity">Şiddete Göre</option>
+        <option value="amount">Tutara Göre</option>
+        <option value="delta">Fark Yüzdesine Göre</option>
+        <option value="name">İsme Göre</option>
+      </select>
+      <input type="text" id="filterSearch" placeholder="Ara..." onkeyup="applyFilters()">
+      <button class="btn btn-outline btn-small" onclick="clearFilters()">Temizle</button>
+      <span class="count" id="filterCount"></span>
+    </div>
+
+    <div class="export-bar">
+      <button class="btn btn-outline btn-small" onclick="exportExcel()">Excel'e Aktar</button>
+      <button class="btn btn-outline btn-small" onclick="exportFeedback()">Geri Bildir. İndir</button>
+      <button class="btn btn-outline btn-small" onclick="exportPDF()">PDF Rapor</button>
+    </div>
+
+    <div class="diff-table-wrap">
+      <table class="diff-table">
+        <thead>
+          <tr>
+            <th>Poz No</th>
+            <th>İmalat</th>
+            <th>Kategori</th>
+            <th>Şiddet</th>
+            <th>V1 Miktar</th>
+            <th>V2 Miktar</th>
+            <th>Fark</th>
+            <th>Birim Fiyat</th>
+            <th>Tutar Farkı</th>
+          </tr>
+        </thead>
+        <tbody id="diffBody"></tbody>
+      </table>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-outline" onclick="goToStep(2)">Geri Dön</button>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <h2>İki Excel dosyası yükleyin</h2>
+    <p>V1 (temel) ve V2 (revize) metraj dosyalarını sürükleyip bırakın veya tıklayarak seçin. Sistem otomatik olarak farkları tespit edecek.</p>
+  </div>
+</div>
+
+<div id="feedbackFab" class="feedback-fab" onclick="openFeedbackModal()">💬</div>
+
+<div class="modal" id="testModal">
+  <div class="modal-content">
+    <div class="modal-title">Test Sonuçları</div>
+    <div class="modal-results" id="testResults"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeTestModal()">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="feedbackModal">
+  <div class="modal-content">
+    <div class="modal-title">Geri Bildirim Gönderin</div>
+    <div class="modal-body">Karşılaştırma sonuçlarını iyileştirmemize yardımcı olun.</div>
+    <div class="modal-form">
+      <select id="feedbackType">
+        <option value="">Geri bildirimin türünü seçin</option>
+        <option value="general">Genel yorum</option>
+        <option value="match_error">Eşleşme hatası</option>
+        <option value="missing_item">Eksik kalem</option>
+        <option value="wrong_qty">Yanlış miktar</option>
+        <option value="other">Diğer</option>
+      </select>
+      <textarea id="feedbackText" placeholder="Açıklayın..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeFeedbackModal()">İptal</button>
+      <button class="btn btn-primary" onclick="submitFeedback()">Gönder</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/main.js"></script>
+
+</body>
+</html>
